@@ -1,7 +1,16 @@
 import '@mediapipe/drawing_utils';
 import '@mediapipe/hands';
+import type { Results } from '@mediapipe/hands';
 
-export const drawHandSkeleton = (ctx, results) => {
+export interface Point {
+  x: number;
+  y: number;
+}
+
+export const drawHandSkeleton = (
+  ctx: CanvasRenderingContext2D,
+  results: Results,
+): void => {
   if (!results.multiHandLandmarks) return;
 
   const drawConnectors = window.drawConnectors;
@@ -24,7 +33,13 @@ export const drawHandSkeleton = (ctx, results) => {
   }
 };
 
-export const drawLine = (ctx, start, end, color, width) => {
+export const drawLine = (
+  ctx: CanvasRenderingContext2D,
+  start: Point,
+  end: Point,
+  color: string,
+  width: number,
+): void => {
   ctx.beginPath();
   ctx.moveTo(start.x, start.y);
   ctx.lineTo(end.x, end.y);

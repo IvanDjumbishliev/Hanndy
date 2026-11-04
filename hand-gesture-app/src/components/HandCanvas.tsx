@@ -1,78 +1,83 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
+import type { ReactElement } from 'react';
+import type { Results } from '@mediapipe/hands';
+import type { Point } from '../utils/drawingUtils';
 import { useHandTracking } from '../hooks/useHandTracking';
 import { drawHandSkeleton, drawLine } from '../utils/drawingUtils';
 import { detectShape } from '../utils/gestureUtils';
 import ControlPanel from './ControlPanel';
 import Scene3D from './Scene3D';
+import type { Scene3DHandle } from './Scene3D';
 import '../styles/HandCanvas.css';
 
-const HandCanvas = () => {
-    const videoRef = useRef(null);
-    const canvasRef = useRef(null);
-    const drawingCanvasRef = useRef(null);
-    const { results } = useHandTracking(videoRef, canvasRef);
+type ActiveTool = 'freehand' | 'shape';
+type ViewMode = '2d' | '3d';
+
+interface Point3D {
+    x: number;
+    y: number;
+    z: number;
+}
+
+interface DrawingLine3D {
+    points: Point3D[];
+    color: string;
+    size: number;
+}
+
+const HandCanvas = (): ReactElement => {
+    const videoRef = useRef<HTMLVideoElement | null>(null);
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const drawingCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    const { results }: { results: Results | null } = useHandTracking(videoRef, canvasRef);
 
     // UI State
-    const [activeTool, setActiveTool] = useState('freehand'); // 'freehand' | 'shape' | '3d'
-    const [brushColor, setBrushColor] = useState('#00FF00');
-    const [brushSize, setBrushSize] = useState(5);
-    const [isDynamicSize, setIsDynamicSize] = useState(false);
-    const [showSkeleton, setShowSkeleton] = useState(true);
-    const [isLoading, setIsLoading] = useState(true);
-    const [viewMode, setViewMode] = useState('2d'); // '2d' | '3d'
-    const [isNeon, setIsNeon] = useState(true);
-    const [showGrid, setShowGrid] = useState(true);
-    const [autoRotate, setAutoRotate] = useState(false);
-    const scene3DRef = useRef();
+    const [activeTool, setActiveTool] = useState<ActiveTool>('freehand');
+    const [brushColor, setBrushColor] = useState<string>('#00FF00');
+    const [brushSize, setBrushSize] = useState<number>(5);
+    const [isDynamicSize, setIsDynamicSize] = useState<boolean>(false);
+    const [showSkeleton, setShowSkeleton] = useState<boolean>(true);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [viewMode, setViewMode] = useState<ViewMode>('2d');
+    const [isNeon, setIsNeon] = useState<boolean>(true);
+    const [showGrid, setShowGrid] = useState<boolean>(true);
+    const [autoRotate, setAutoRotate] = useState<boolean>(false);
+    const scene3DRef = useRef<Scene3DHandle | null>(null);
 
     // Smoothed Landmarks state
-    const smoothedPos = useRef({ x: 0.5, y: 0.5, z: 0.5 });
-    const smoothingAlpha = 0.4; // 0 to 1, lower = smoother
+    const smoothedPos = useRef<{ x: number; y: number; z: number }>({ x: 0.5, y: 0.5, z: 0.5 });
+    const smoothingAlpha: number = 0.4; // 0 to 1, lower = smoother
 
     // Gesture Cooldown
-    const gestureCooldown = useRef(0);
+    const gestureCooldown = useRef<number>(0);
 
     // Drawing State
-    const [isDrawing, setIsDrawing] = useState(false);
-    const [lastPoint, setLastPoint] = useState(null);
-    const currentPathRef = useRef([]);
-    const [lines3D, setLines3D] = useState([]);
-    const [activeLine3D, setActiveLine3D] = useState([]);
+    const [isDrawing, setIsDrawing] = useState<boolean>(false);
+    const [lastPoint, setLastPoint] = useState<Point | null>(null);
+    const currentPathRef = useRef<Point[]>([]);
+    const [lines3D, setLines3D] = useState<DrawingLine3D[]>([]);
+    const [activeLine3D, setActiveLine3D] = useState<Point3D[]>([]);
 
     // History for Undo
-    const historyRef = useRef([]);
+    const historyRef = useRef<ImageData[]>([]);
 
-    const handleExport3D = () => {
+    const handleExport3D = useCallback((): void => {
         if (scene3DRef.current) {
             scene3DRef.current.exportScene();
         }
-    };
+    }, []);
 
-    // Keyboard Shortcuts
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.ctrlKey && e.key === 'z') {
-                e.preventDefault();
-                undo();
-            } else if (e.ctrlKey && e.key === 's') {
-                e.preventDefault();
-                if (viewMode === '3d') handleExport3D();
-                else saveImage();
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [viewMode, lines3D, activeLine3D]);
-
-    useEffect(() => {
+    useEffect((): void => {
         if (results) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- The camera resolves hand tracking asynchronously.
             setIsLoading(false);
         }
     }, [results]);
 
-    const saveHistory = () => {
+    const saveHistory = (): void => {
         if (!drawingCanvasRef.current) return;
         const ctx = drawingCanvasRef.current.getContext('2d');
+        if (!ctx) return;
         const width = drawingCanvasRef.current.width;
         const height = drawingCanvasRef.current.height;
         const imageData = ctx.getImageData(0, 0, width, height);
@@ -83,21 +88,22 @@ const HandCanvas = () => {
         }
     };
 
-    const undo = () => {
+    const undo = useCallback((): void => {
         if (viewMode === '3d') {
-            setLines3D(prev => prev.slice(0, -1));
+            setLines3D((prev: DrawingLine3D[]): DrawingLine3D[] => prev.slice(0, -1));
             return;
         }
 
         if (historyRef.current.length === 0 || !drawingCanvasRef.current) return;
         const ctx = drawingCanvasRef.current.getContext('2d');
+        if (!ctx) return;
         const previousState = historyRef.current.pop();
         if (previousState) {
             ctx.putImageData(previousState, 0, 0);
         }
-    };
+    }, [viewMode]);
 
-    const clearCanvas = () => {
+    const clearCanvas = (): void => {
         if (viewMode === '3d') {
             setLines3D([]);
             setActiveLine3D([]);
@@ -106,10 +112,11 @@ const HandCanvas = () => {
         if (!drawingCanvasRef.current) return;
         saveHistory();
         const ctx = drawingCanvasRef.current.getContext('2d');
+        if (!ctx) return;
         ctx.clearRect(0, 0, drawingCanvasRef.current.width, drawingCanvasRef.current.height);
     };
 
-    const saveImage = () => {
+    const saveImage = useCallback((): void => {
         if (!drawingCanvasRef.current) return;
 
         // Create a temporary canvas to composite with background
@@ -117,6 +124,7 @@ const HandCanvas = () => {
         tempCanvas.width = drawingCanvasRef.current.width;
         tempCanvas.height = drawingCanvasRef.current.height;
         const ctx = tempCanvas.getContext('2d');
+        if (!ctx) return;
 
         // Fill background
         ctx.fillStyle = '#1a1a1a'; // Match app background
@@ -130,14 +138,33 @@ const HandCanvas = () => {
         link.download = `air-draw-${Date.now()}.png`;
         link.href = tempCanvas.toDataURL();
         link.click();
-    };
+    }, []);
+
+    // Keyboard Shortcuts
+    useEffect((): (() => void) => {
+        const handleKeyDown = (e: KeyboardEvent): void => {
+            if (e.ctrlKey && e.key === 'z') {
+                e.preventDefault();
+                undo();
+            } else if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                if (viewMode === '3d') handleExport3D();
+                else saveImage();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return (): void => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [viewMode, handleExport3D, saveImage, undo]);
 
     // Main Loop
-    useEffect(() => {
+    useEffect((): void => {
         if (!canvasRef.current || !results || !drawingCanvasRef.current) return;
 
         const ctx = canvasRef.current.getContext('2d');
         const drawingCtx = drawingCanvasRef.current.getContext('2d');
+        if (!ctx || !drawingCtx) return;
         const width = canvasRef.current.width;
         const height = canvasRef.current.height;
 
@@ -183,7 +210,7 @@ const HandCanvas = () => {
 
             // Gesture: Fist for Undo (Distance between all fingers and wrist is small)
             // Simplified: Distance between tip 8 and 12 and 16 and 20 to palm
-            const isFist = [8, 12, 16, 20].every(tipIdx => {
+            const isFist = [8, 12, 16, 20].every((tipIdx: number): boolean => {
                 const tip = landmarks[tipIdx];
                 const palm = landmarks[0];
                 const dist = Math.sqrt(Math.pow(tip.x - palm.x, 2) + Math.pow(tip.y - palm.y, 2));
@@ -191,6 +218,7 @@ const HandCanvas = () => {
             });
 
             if (isFist && Date.now() - gestureCooldown.current > 1000) {
+                // eslint-disable-next-line react-hooks/set-state-in-effect -- Hand-tracking results trigger gesture actions.
                 undo();
                 gestureCooldown.current = Date.now();
             }
@@ -214,7 +242,7 @@ const HandCanvas = () => {
                         const z = (1 - smoothedPos.current.z) * 10 - 5;
                         const x3d = (smoothedPos.current.x - 0.5) * 20;
                         const y3d = (0.5 - smoothedPos.current.y) * 20;
-                        setActiveLine3D(prev => [...prev, { x: x3d, y: y3d, z }]);
+                        setActiveLine3D((prev: Point3D[]): Point3D[] => [...prev, { x: x3d, y: y3d, z }]);
                     } else {
                         if (activeTool === 'freehand') {
                             if (lastPoint) {
@@ -244,7 +272,7 @@ const HandCanvas = () => {
                     setLastPoint(null);
 
                     if (viewMode === '3d') {
-                        setLines3D(prev => [...prev, { points: activeLine3D, color: brushColor, size: brushSize }]);
+                        setLines3D((prev: DrawingLine3D[]): DrawingLine3D[] => [...prev, { points: activeLine3D, color: brushColor, size: brushSize }]);
                         setActiveLine3D([]);
                     } else if (activeTool === 'shape') {
                         const shape = detectShape(currentPathRef.current);
@@ -282,11 +310,11 @@ const HandCanvas = () => {
         }
 
         ctx.restore();
-    }, [results, isDrawing, lastPoint, activeTool, brushColor, brushSize, isDynamicSize, showSkeleton, viewMode, activeLine3D]);
+    }, [results, isDrawing, lastPoint, activeTool, brushColor, brushSize, isDynamicSize, showSkeleton, viewMode, activeLine3D, undo]);
 
     // Initialize canvas size
-    useEffect(() => {
-        const resizeCanvas = () => {
+    useEffect((): (() => void) => {
+        const resizeCanvas = (): void => {
             if (canvasRef.current && videoRef.current && drawingCanvasRef.current) {
                 canvasRef.current.width = window.innerWidth;
                 canvasRef.current.height = window.innerHeight;
@@ -298,7 +326,9 @@ const HandCanvas = () => {
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        return () => window.removeEventListener('resize', resizeCanvas);
+        return (): void => {
+            window.removeEventListener('resize', resizeCanvas);
+        };
     }, []);
 
     return (

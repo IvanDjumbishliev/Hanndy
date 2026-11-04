@@ -1,8 +1,19 @@
 
-// Simple geometry helpers
-const distance = (p1, p2) => Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+import type { Point } from './drawingUtils';
 
-const getPathLength = (path) => {
+// Simple geometry helpers
+interface BoundingBox {
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+    width: number;
+    height: number;
+}
+
+const distance = (p1: Point, p2: Point): number => Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+
+const getPathLength = (path: Point[]): number => {
     let len = 0;
     for (let i = 1; i < path.length; i++) {
         len += distance(path[i - 1], path[i]);
@@ -10,7 +21,7 @@ const getPathLength = (path) => {
     return len;
 };
 
-const getBoundingBox = (path) => {
+const getBoundingBox = (path: Point[]): BoundingBox => {
     if (path.length === 0) return { minX: 0, maxX: 0, minY: 0, maxY: 0, width: 0, height: 0 };
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     for (const p of path) {
@@ -22,7 +33,7 @@ const getBoundingBox = (path) => {
     return { minX, maxX, minY, maxY, width: maxX - minX, height: maxY - minY };
 };
 
-export const detectShape = (path) => {
+export const detectShape = (path: Point[]): 'circle' | 'rectangle' | 'line' | null => {
     if (path.length < 10) return null; // Not enough points
 
     const bbox = getBoundingBox(path);

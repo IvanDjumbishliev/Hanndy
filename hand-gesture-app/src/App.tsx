@@ -1,9 +1,9 @@
 
-import React from 'react';
+import type { ReactElement } from 'react';
 import HandCanvas from './components/HandCanvas';
 import './App.css';
 
-function App() {
+function App(): ReactElement {
   return (
     <div className="App">
       <HandCanvas />

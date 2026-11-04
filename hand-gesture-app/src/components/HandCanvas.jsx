@@ -32,6 +32,16 @@ const HandCanvas = () => {
     // Gesture Cooldown
     const gestureCooldown = useRef(0);
 
+    // Drawing State
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [lastPoint, setLastPoint] = useState(null);
+    const currentPathRef = useRef([]);
+    const [lines3D, setLines3D] = useState([]);
+    const [activeLine3D, setActiveLine3D] = useState([]);
+
+    // History for Undo
+    const historyRef = useRef([]);
+
     const handleExport3D = () => {
         if (scene3DRef.current) {
             scene3DRef.current.exportScene();
@@ -53,17 +63,6 @@ const HandCanvas = () => {
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [viewMode, lines3D, activeLine3D]);
-
-
-    // Drawing State
-    const [isDrawing, setIsDrawing] = useState(false);
-    const [lastPoint, setLastPoint] = useState(null);
-    const currentPathRef = useRef([]);
-    const [lines3D, setLines3D] = useState([]);
-    const [activeLine3D, setActiveLine3D] = useState([]);
-
-    // History for Undo
-    const historyRef = useRef([]);
 
     useEffect(() => {
         if (results) {

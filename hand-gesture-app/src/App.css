@@ -2,3 +2,181 @@
 .App {
   text-align: center;
 }
+
+.gesture-display,
+.gesture-history,
+.performance-stats {
+  position: absolute;
+  z-index: 20;
+  color: var(--text-main, #e0e0e0);
+  background: rgba(10, 10, 11, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-family: system-ui, sans-serif;
+}
+
+.gesture-display {
+  top: 20px;
+  left: 20px;
+  min-width: 220px;
+  text-align: left;
+}
+
+.gesture-display__label,
+.gesture-display__meta,
+.gesture-display__confidence {
+  display: block;
+  color: #a0a0a0;
+  font-size: 0.8rem;
+}
+
+.gesture-display__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.gesture-display__name span {
+  font-size: 1.4rem;
+}
+
+.gesture-display__track {
+  height: 6px;
+  margin: 10px 0 5px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #333;
+}
+
+.gesture-display__bar {
+  height: 100%;
+  background: #00ff00;
+  transition: width 0.2s ease;
+}
+
+.gesture-history {
+  bottom: 20px;
+  left: 20px;
+  width: min(390px, calc(100vw - 40px));
+  max-height: 260px;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.gesture-history h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.gesture-history ol {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gesture-history li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.gesture-history time,
+.gesture-history__empty {
+  color: #a0a0a0;
+}
+
+.performance-stats {
+  top: 170px;
+  left: 20px;
+  min-width: 160px;
+  text-align: left;
+}
+
+.performance-stats button {
+  width: 100%;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.performance-stats dl {
+  display: grid;
+  gap: 5px;
+  margin: 10px 0 0;
+}
+
+.performance-stats dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.85rem;
+}
+
+.performance-stats dt {
+  color: #a0a0a0;
+}
+
+.performance-stats dd {
+  margin: 0;
+}
+
+.gesture-action {
+  display: flex;
+  justify-content: space-between;
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+}
+
+.gesture-action span {
+  color: var(--primary, #00ff00);
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 12px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.76);
+  font-family: system-ui, sans-serif;
+}
+
+.loading-overlay p {
+  margin: 0;
+}
+
+.camera-error {
+  max-width: 420px;
+  padding: 0 24px;
+  color: #ff7777;
+  text-align: center;
+}
+
+.spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #00ff00;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

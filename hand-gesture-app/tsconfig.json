@@ -14,5 +14,5 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["src", "types", "vite.config.ts", "eslint.config.ts"]
+  "include": ["src", "vite.config.ts", "eslint.config.ts"]
 }

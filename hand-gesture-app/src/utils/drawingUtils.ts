@@ -1,5 +1,3 @@
-import '@mediapipe/drawing_utils';
-import '@mediapipe/hands';
 import type { Results } from '@mediapipe/hands';
 
 export interface Point {

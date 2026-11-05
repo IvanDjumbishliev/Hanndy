@@ -1,0 +1,154 @@
+.display {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, 220px));
+  gap: 12px;
+  transform: translateX(-50%);
+}
+
+.card {
+  display: flex;
+  min-width: 160px;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 24px;
+  color: #f5f7fa;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  animation: cardEntry 200ms ease-out both;
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #001113;
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.leftBadge {
+  background: #00f5ff;
+}
+
+.rightBadge {
+  background: #ff00e5;
+  color: #1a0017;
+}
+
+.emoji {
+  margin-top: 12px;
+  font-size: 56px;
+  line-height: 1.2;
+  filter: drop-shadow(0 3px 8px rgba(255, 255, 255, 0.24));
+}
+
+.gestureName {
+  margin: 8px 0 16px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.gestureName span {
+  font-size: 16px;
+}
+
+.confidenceTrack {
+  display: block;
+  width: 100%;
+  height: 6px;
+  overflow: hidden;
+  appearance: none;
+  border: 0;
+  border-radius: 3px;
+  background: #333;
+}
+
+.confidenceTrack::-webkit-progress-bar {
+  border-radius: 3px;
+  background: #333;
+}
+
+.confidenceTrack::-webkit-progress-value {
+  border-radius: 3px;
+  transition: width 150ms ease-out;
+}
+
+.confidenceTrack::-moz-progress-bar {
+  border-radius: 3px;
+  transition: width 150ms ease-out;
+}
+
+.highConfidence::-webkit-progress-value,
+.highConfidence::-moz-progress-bar {
+  background: #20d97a;
+}
+
+.mediumConfidence::-webkit-progress-value,
+.mediumConfidence::-moz-progress-bar {
+  background: #f5cc36;
+}
+
+.lowConfidence::-webkit-progress-value,
+.lowConfidence::-moz-progress-bar {
+  background: #ff4d5e;
+}
+
+.confidenceLabel {
+  align-self: flex-end;
+  margin-top: 5px;
+  color: #c1c6ce;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.placeholder {
+  grid-column: 1 / -1;
+  min-width: 220px;
+  color: #777f89;
+  background: rgba(0, 0, 0, 0.62);
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+.placeholder .emoji {
+  filter: grayscale(1) drop-shadow(0 3px 8px rgba(255, 255, 255, 0.12));
+}
+
+.placeholderText {
+  margin-top: 8px;
+  color: #9aa1aa;
+  font-size: 14px;
+}
+
+@keyframes cardEntry {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 520px) {
+  .display {
+    grid-template-columns: minmax(160px, calc(100vw - 40px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation-duration: 1ms;
+  }
+}

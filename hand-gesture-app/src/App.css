@@ -3,7 +3,6 @@
   text-align: center;
 }
 
-.gesture-display,
 .gesture-history,
 .performance-stats {
   position: absolute;
@@ -14,106 +13,6 @@
   border-radius: 14px;
   padding: 14px 16px;
   font-family: system-ui, sans-serif;
-}
-
-.gesture-display {
-  top: 20px;
-  left: 50%;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(220px, 260px));
-  gap: 12px;
-  padding: 0;
-  background: transparent;
-  border: 0;
-  transform: translateX(-50%);
-}
-
-.gesture-display--single {
-  grid-template-columns: minmax(220px, 260px);
-}
-
-.gesture-card {
-  min-width: 0;
-  padding: 14px 16px;
-  color: var(--text-main, #e0e0e0);
-  background: rgba(10, 10, 11, 0.84);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
-  font-family: system-ui, sans-serif;
-  text-align: left;
-}
-
-.gesture-card--placeholder {
-  grid-column: 1 / -1;
-  color: #a0a0a0;
-  text-align: center;
-}
-
-.gesture-display--single .gesture-card {
-  text-align: center;
-}
-
-.gesture-card__hand {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: #c8c8c8;
-  font-size: 0.8rem;
-}
-
-.gesture-display--single .gesture-card__hand {
-  justify-content: center;
-}
-
-.gesture-card__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  box-shadow: 0 0 8px currentColor;
-}
-
-.gesture-display__label,
-.gesture-display__meta,
-.gesture-display__confidence {
-  display: block;
-  color: #a0a0a0;
-  font-size: 0.8rem;
-}
-
-.gesture-display__name {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 5px 0;
-  font-size: 1.15rem;
-  font-weight: 700;
-}
-
-.gesture-display__name span {
-  font-size: 1.4rem;
-}
-
-.gesture-display__track {
-  height: 6px;
-  margin: 10px 0 5px;
-  overflow: hidden;
-  border-radius: 6px;
-  background: #333;
-}
-
-.gesture-display__bar {
-  height: 100%;
-  transition: width 0.2s ease;
-}
-
-@media (max-width: 520px) {
-  .gesture-display {
-    grid-template-columns: minmax(200px, calc(100vw - 40px));
-  }
-
-  .gesture-display--single {
-    grid-template-columns: minmax(200px, calc(100vw - 40px));
-  }
 }
 
 .gesture-history {

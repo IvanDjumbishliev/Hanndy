@@ -2,50 +2,46 @@ import { memo } from 'react';
 import type { ReactElement } from 'react';
 import type { GestureResult } from '../types/gestures';
 import { GESTURE_EMOJI } from '../gestures/emojiMap';
+import styles from './GestureDisplay.module.css';
 
 interface GestureDisplayProps {
   hands: Array<{ gesture: GestureResult; handedness: 'Left' | 'Right' }>;
 }
 
-const handColors: Record<'Left' | 'Right', string> = {
-  Left: '#00f5ff',
-  Right: '#ff00e5',
-};
-
 const GestureDisplay = ({ hands }: GestureDisplayProps): ReactElement => (
-  <section className={`gesture-display${hands.length === 1 ? ' gesture-display--single' : ''}`} aria-live="polite">
+  <section className={styles.display} aria-label="Detected gestures" aria-live="polite">
     {hands.length === 0 ? (
-      <article className="gesture-card gesture-card--placeholder">— No hand detected —</article>
-    ) : hands.map(({ gesture, handedness }) => (
-      <article className="gesture-card" key={handedness}>
-        <div className="gesture-card__hand">
-          <span
-            className="gesture-card__dot"
-            style={{ backgroundColor: handColors[handedness] }}
-            aria-hidden="true"
-          />
-          {handedness}
-        </div>
-        <div className="gesture-display__name">
-          <span aria-hidden="true">{GESTURE_EMOJI[gesture.gestureName]}</span>
-          {gesture.gestureName}
-        </div>
-        <div
-          className="gesture-display__track"
-          role="progressbar"
-          aria-label={`${handedness} hand gesture confidence`}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={Math.round(gesture.confidence * 100)}
-        >
-          <div
-            className="gesture-display__bar"
-            style={{ width: `${gesture.confidence * 100}%`, backgroundColor: handColors[handedness] }}
-          />
-        </div>
-        <span className="gesture-display__confidence">{Math.round(gesture.confidence * 100)}% confidence</span>
+      <article className={`${styles.card} ${styles.placeholder}`} key="placeholder">
+        <span className={styles.emoji} aria-hidden="true">🤚</span>
+        <span className={styles.placeholderText}>No hand detected</span>
       </article>
-    ))}
+    ) : hands.map(({ gesture, handedness }) => {
+      const percentage = Math.round(gesture.confidence * 100);
+      const confidenceClass = gesture.confidence >= 0.8
+        ? styles.highConfidence
+        : gesture.confidence >= 0.5
+          ? styles.mediumConfidence
+          : styles.lowConfidence;
+
+      return (
+        <article className={styles.card} key={`${handedness}-${gesture.gestureName}`}>
+          <span className={`${styles.badge} ${handedness === 'Left' ? styles.leftBadge : styles.rightBadge}`}>
+            {handedness} Hand
+          </span>
+          <span className={styles.emoji} aria-hidden="true">{GESTURE_EMOJI[gesture.gestureName]}</span>
+          <h2 className={styles.gestureName}>
+            {gesture.gestureName} <span aria-hidden="true">{GESTURE_EMOJI[gesture.gestureName]}</span>
+          </h2>
+          <progress
+            className={`${styles.confidenceTrack} ${confidenceClass}`}
+            value={percentage}
+            max={100}
+            aria-label={`${handedness} hand confidence`}
+          />
+          <span className={styles.confidenceLabel}>{percentage}%</span>
+        </article>
+      );
+    })}
   </section>
 );
 

@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
 import type { RefObject } from 'react';
-import type { GestureResult } from '../types/gestures';
 import type { FrameRenderer, HandTrackingResults } from '../types/tracking';
 import type { Point } from '../utils/drawingUtils';
 import { drawLine } from '../utils/drawingUtils';
@@ -26,7 +25,6 @@ interface UseAirDrawingOptions {
   brushSize: number;
   isDynamicSize: boolean;
   viewMode: DrawingViewMode;
-  onGestureChange: (gesture: GestureResult | null) => void;
 }
 
 interface AirDrawingState {
@@ -48,7 +46,6 @@ export const useAirDrawing = ({
   brushSize,
   isDynamicSize,
   viewMode,
-  onGestureChange,
 }: UseAirDrawingOptions): AirDrawingState => {
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [lastPoint, setLastPoint] = useState<Point | null>(null);
@@ -58,8 +55,6 @@ export const useAirDrawing = ({
   const historyRef = useRef<ImageData[]>([]);
   const smoothedPos = useRef<Point3D>({ x: 0.5, y: 0.5, z: 0.5 });
   const gestureCooldown = useRef<number>(0);
-  const previousGestureRef = useRef<GestureResult | null>(null);
-  const lastGestureReportRef = useRef<number>(0);
 
   const saveHistory = useCallback((): void => {
     const canvas = drawingCanvasRef.current;
@@ -111,46 +106,6 @@ export const useAirDrawing = ({
     link.click();
   }, [drawingCanvasRef]);
 
-  const reportGesture = useCallback((
-    results: HandTrackingResults,
-    landmarks: HandTrackingResults['multiHandLandmarks'][number] | undefined,
-    isPinching: boolean,
-    isFist: boolean,
-  ): void => {
-    const handedness = results.multiHandedness[0]?.label;
-    const gestureName = isPinching ? 'Pinch' : isFist ? 'Fist' : null;
-    const previous = previousGestureRef.current;
-    if (!gestureName || !landmarks || !handedness) {
-      if (previous) {
-        previousGestureRef.current = null;
-        onGestureChange(null);
-      }
-      return;
-    }
-    const indexTip = landmarks[8];
-    const thumbTip = landmarks[4];
-    const pinchDistance = pointDistance(indexTip, thumbTip);
-    const confidence = isPinching
-      ? Math.max(0, Math.min(1, 1 - pinchDistance / 0.08))
-      : Math.max(0, Math.min(1, 1 - [8, 12, 16, 20].reduce(
-        (sum: number, tipIndex: number): number =>
-          sum + pointDistance(landmarks[tipIndex], landmarks[0]),
-        0,
-      ) / 4 / 0.12));
-    const gesture: GestureResult = {
-      gestureName,
-      confidence,
-      handedness,
-      landmarks,
-    };
-    const now = performance.now();
-    if (previous?.gestureName !== gestureName || now - lastGestureReportRef.current >= 250) {
-      previousGestureRef.current = gesture;
-      lastGestureReportRef.current = now;
-      onGestureChange(gesture);
-    }
-  }, [onGestureChange]);
-
   const renderFrame = useCallback((
     context: CanvasRenderingContext2D,
     results: HandTrackingResults,
@@ -186,7 +141,6 @@ export const useAirDrawing = ({
       const isPinching = pinchDistance < 0.08;
       const isFist = [8, 12, 16, 20].every((tipIndex: number): boolean =>
         pointDistance(landmarks[tipIndex], landmarks[0]) < 0.12);
-      reportGesture(results, landmarks, isPinching, isFist);
 
       if (isFist && Date.now() - gestureCooldown.current > 1000) {
         undo();
@@ -250,13 +204,11 @@ export const useAirDrawing = ({
       context.fill();
       context.strokeStyle = '#fff';
       context.stroke();
-    } else {
-      reportGesture(results, undefined, false, false);
     }
     context.restore();
   }, [
     activeLine3D, activeTool, brushColor, brushSize, drawingCanvasRef, isDrawing, isDynamicSize,
-    lastPoint, reportGesture, saveHistory, undo, viewMode,
+    lastPoint, saveHistory, undo, viewMode,
   ]);
 
   return { lines3D, activeLine3D, renderFrame, undo, clearCanvas, saveImage };

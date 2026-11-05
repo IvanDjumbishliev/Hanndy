@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import type { GestureResult } from './types/gestures';
-import type { GestureHistoryItem, HandTrackingResults, PerformanceMeasurement } from './types/tracking';
+import type { GestureHistoryItem } from './types/tracking';
 import { useAirDrawing } from './hooks/useAirDrawing';
+import useHandGesture from './hooks/useHandGesture';
 import WebcamFeed from './components/WebcamFeed';
 import LandmarkOverlay from './components/LandmarkOverlay';
 import GestureDisplay from './components/GestureDisplay';
@@ -17,14 +18,11 @@ import './styles/DrawingSurface.css';
 
 function App(): ReactElement {
   const drawingCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const scene3DRef = useRef<Scene3DHandle | null>(null);
   const previousGestureRef = useRef<GestureResult | null>(null);
   const nextGestureId = useRef<number>(0);
-  const [results, setResults] = useState<HandTrackingResults | null>(null);
-  const [gesture, setGesture] = useState<GestureResult | null>(null);
   const [history, setHistory] = useState<GestureHistoryItem[]>([]);
-  const [performance, setPerformance] = useState<PerformanceMeasurement>({ fps: 0, inferenceTime: 0 });
-  const [cameraError, setCameraError] = useState<string | null>(null);
   const [activeTool, setActiveTool] = useState<DrawingTool>('freehand');
   const [brushColor, setBrushColor] = useState<string>('#00FF00');
   const [brushSize, setBrushSize] = useState<number>(5);
@@ -37,23 +35,17 @@ function App(): ReactElement {
   const [showHistory, setShowHistory] = useState<boolean>(false);
   const [showStats, setShowStats] = useState<boolean>(false);
 
-  const onResults = useCallback((frame: HandTrackingResults): void => setResults(frame), []);
-  const onPerformance = useCallback((measurement: PerformanceMeasurement): void => setPerformance(measurement), []);
-  const onError = useCallback((message: string): void => {
-    console.error('Hand tracking failed:', message);
-    setCameraError(message);
-  }, []);
-  const onGestureChange = useCallback((detected: GestureResult | null): void => {
-    setGesture(detected);
-    if (detected && previousGestureRef.current?.gestureName !== detected.gestureName) {
-      const item: GestureHistoryItem = { id: nextGestureId.current++, gesture: detected, detectedAt: Date.now() };
+  const { gesture, fps, inferenceMs, isLoading, error, results } = useHandGesture(videoRef);
+  useEffect((): void => {
+    if (gesture && previousGestureRef.current?.gestureName !== gesture.gestureName) {
+      const item: GestureHistoryItem = { id: nextGestureId.current++, gesture, detectedAt: Date.now() };
       setHistory((previous: GestureHistoryItem[]): GestureHistoryItem[] => [...previous, item].slice(-10));
     }
-    previousGestureRef.current = detected;
-  }, []);
+    previousGestureRef.current = gesture;
+  }, [gesture]);
 
   const drawing = useAirDrawing({
-    drawingCanvasRef, activeTool, brushColor, brushSize, isDynamicSize, viewMode, onGestureChange,
+    drawingCanvasRef, activeTool, brushColor, brushSize, isDynamicSize, viewMode,
   });
   const export3D = useCallback((): void => scene3DRef.current?.exportScene(), []);
   const { undo, clearCanvas, saveImage, renderFrame, lines3D, activeLine3D } = drawing;
@@ -74,17 +66,17 @@ function App(): ReactElement {
 
   return (
     <div className="App hand-canvas-container">
-      <WebcamFeed onResults={onResults} onPerformance={onPerformance} onError={onError} />
+      <WebcamFeed videoRef={videoRef} />
       <LandmarkOverlay results={results} drawingCanvasRef={drawingCanvasRef}
         showSkeleton={showSkeleton} renderFrame={renderFrame} />
-      {results === null && (
+      {(isLoading || error) && (
         <div className="loading-overlay">
-          {cameraError ? <p className="camera-error">{cameraError}</p> : <><div className="spinner" /><p>Loading Hand Tracking Model...</p></>}
+          {error ? <p className="camera-error">{error}</p> : <><div className="spinner" /><p>Loading Hand Tracking Model...</p></>}
         </div>
       )}
       <GestureDisplay gesture={gesture} />
       {showHistory && <GestureHistory items={history} />}
-      {showStats && <PerformanceStats {...performance} />}
+      {showStats && <PerformanceStats fps={fps} inferenceTime={inferenceMs} />}
       <ControlPanel
         activeTool={activeTool} setActiveTool={setActiveTool}
         brushColor={brushColor} setBrushColor={setBrushColor}

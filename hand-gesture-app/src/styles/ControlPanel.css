@@ -1,13 +1,13 @@
 :root {
-    --primary: #00FF00;
-    --primary-glow: rgba(0, 255, 0, 0.5);
-    --bg-dark: #0a0a0b;
-    --glass-bg: rgba(255, 255, 255, 0.05);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --text-main: #e0e0e0;
-    --text-dim: #a0a0a0;
-    --danger: #ff4444;
-    --secondary: #333333;
+    --primary: var(--accent-cyan);
+    --primary-glow: color-mix(in srgb, var(--accent-cyan) 50%, transparent);
+    --bg-dark: var(--bg-primary);
+    --glass-bg: var(--bg-card);
+    --glass-border: var(--border-color);
+    --text-main: var(--text-primary);
+    --text-dim: var(--text-muted);
+    --danger: var(--accent-danger);
+    --secondary: var(--bg-secondary);
 }
 
 .control-panel.glassmorphism {
@@ -22,7 +22,7 @@
     border-radius: 20px;
     padding: 24px;
     color: var(--text-main);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+    box-shadow: 0 8px 32px 0 color-mix(in srgb, var(--bg-primary) 80%, transparent);
     z-index: 1000;
     display: flex;
     flex-direction: column;
@@ -57,7 +57,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
-    background: rgba(0, 0, 0, 0.3);
+    background: color-mix(in srgb, var(--bg-primary) 30%, transparent);
     padding: 4px;
     border-radius: 10px;
 }
@@ -78,7 +78,7 @@
 .tool-buttons button.active {
     background: var(--glass-bg);
     color: var(--primary);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--bg-primary) 40%, transparent);
 }
 
 .color-picker {
@@ -100,7 +100,7 @@
 }
 
 .color-swatch.active {
-    border-color: #fff;
+    border-color: var(--text-primary);
     box-shadow: 0 0 10px currentColor;
 }
 
@@ -156,7 +156,7 @@
 
 .btn-primary {
     background: var(--primary);
-    color: #000;
+    color: var(--text-on-accent);
 }
 
 .btn-primary:hover {
@@ -166,27 +166,27 @@
 
 .btn-secondary {
     background: var(--secondary);
-    color: #fff;
+    color: var(--text-primary);
 }
 
 .btn-danger {
-    background: rgba(255, 68, 68, 0.1);
+    background: color-mix(in srgb, var(--accent-danger) 10%, transparent);
     color: var(--danger);
-    border: 1px solid rgba(255, 68, 68, 0.2) !important;
+    border: 1px solid color-mix(in srgb, var(--accent-danger) 20%, transparent) !important;
 }
 
 .btn-danger:hover {
     background: var(--danger);
-    color: #fff;
+    color: var(--text-primary);
 }
 
 .btn-success {
-    background: rgba(0, 255, 127, 0.1);
-    color: #00ff7f;
-    border: 1px solid rgba(0, 255, 127, 0.2) !important;
+    background: color-mix(in srgb, var(--accent-success) 10%, transparent);
+    color: var(--accent-success);
+    border: 1px solid color-mix(in srgb, var(--accent-success) 20%, transparent) !important;
 }
 
 .btn-success:hover {
-    background: #00ff7f;
-    color: #000;
+    background: var(--accent-success);
+    color: var(--text-on-accent);
 }

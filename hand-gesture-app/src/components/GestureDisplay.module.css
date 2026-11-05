@@ -15,9 +15,9 @@
   flex-direction: column;
   align-items: center;
   padding: 20px 24px;
-  color: #f5f7fa;
-  background: rgba(0, 0, 0, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--bg-primary) 70%, transparent);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   backdrop-filter: blur(12px);
   animation: cardEntry 200ms ease-out both;
@@ -26,7 +26,7 @@
 .badge {
   padding: 4px 8px;
   border-radius: 999px;
-  color: #001113;
+  color: var(--text-on-accent);
   font-family: monospace;
   font-size: 11px;
   font-weight: 700;
@@ -35,19 +35,19 @@
 }
 
 .leftBadge {
-  background: #00f5ff;
+  background: var(--accent-cyan);
 }
 
 .rightBadge {
-  background: #ff00e5;
-  color: #1a0017;
+  background: var(--accent-magenta);
+  color: var(--text-on-accent);
 }
 
 .emoji {
   margin-top: 12px;
   font-size: 56px;
   line-height: 1.2;
-  filter: drop-shadow(0 3px 8px rgba(255, 255, 255, 0.24));
+  filter: drop-shadow(0 3px 8px color-mix(in srgb, var(--text-primary) 24%, transparent));
 }
 
 .gestureName {
@@ -70,12 +70,12 @@
   appearance: none;
   border: 0;
   border-radius: 3px;
-  background: #333;
+  background: var(--bg-secondary);
 }
 
 .confidenceTrack::-webkit-progress-bar {
   border-radius: 3px;
-  background: #333;
+  background: var(--bg-secondary);
 }
 
 .confidenceTrack::-webkit-progress-value {
@@ -90,23 +90,23 @@
 
 .highConfidence::-webkit-progress-value,
 .highConfidence::-moz-progress-bar {
-  background: #20d97a;
+  background: var(--accent-success);
 }
 
 .mediumConfidence::-webkit-progress-value,
 .mediumConfidence::-moz-progress-bar {
-  background: #f5cc36;
+  background: var(--accent-warning);
 }
 
 .lowConfidence::-webkit-progress-value,
 .lowConfidence::-moz-progress-bar {
-  background: #ff4d5e;
+  background: var(--accent-danger);
 }
 
 .confidenceLabel {
   align-self: flex-end;
   margin-top: 5px;
-  color: #c1c6ce;
+  color: var(--text-muted);
   font-family: monospace;
   font-size: 12px;
 }
@@ -114,18 +114,18 @@
 .placeholder {
   grid-column: 1 / -1;
   min-width: 220px;
-  color: #777f89;
-  background: rgba(0, 0, 0, 0.62);
-  border-color: rgba(255, 255, 255, 0.07);
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--bg-primary) 62%, transparent);
+  border-color: color-mix(in srgb, var(--border-color) 70%, transparent);
 }
 
 .placeholder .emoji {
-  filter: grayscale(1) drop-shadow(0 3px 8px rgba(255, 255, 255, 0.12));
+  filter: grayscale(1) drop-shadow(0 3px 8px color-mix(in srgb, var(--text-primary) 12%, transparent));
 }
 
 .placeholderText {
   margin-top: 8px;
-  color: #9aa1aa;
+  color: var(--text-muted);
   font-size: 14px;
 }
 

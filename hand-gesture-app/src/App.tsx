@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import type { GestureName, GestureResult } from './types/gestures';
 import { useAirDrawing } from './hooks/useAirDrawing';
@@ -19,9 +19,24 @@ import type { DrawingTool, DrawingViewMode } from './hooks/useAirDrawing';
 import './App.css';
 import './styles/DrawingSurface.css';
 
+type Theme = 'dark' | 'light';
+
+const getInitialTheme = (): Theme => {
+  if (typeof window === 'undefined') return 'dark';
+  try {
+    const savedTheme = window.localStorage.getItem('hanndy-theme');
+    if (savedTheme === 'dark' || savedTheme === 'light') return savedTheme;
+  } catch {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+};
+
 function App(): ReactElement {
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const [isStarted, setIsStarted] = useState<boolean>(false);
   const [isSplashVisible, setIsSplashVisible] = useState<boolean>(true);
+  const isThemeChangeUserInitiatedRef = useRef<boolean>(false);
   const drawingCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const scene3DRef = useRef<Scene3DHandle | null>(null);
@@ -38,6 +53,14 @@ function App(): ReactElement {
   const [autoRotate, setAutoRotate] = useState<boolean>(false);
   const [showHistory, setShowHistory] = useState<boolean>(false);
   const [showStats, setShowStats] = useState<boolean>(false);
+
+  useLayoutEffect((): void => {
+    document.documentElement.dataset.theme = theme;
+    if (isThemeChangeUserInitiatedRef.current) {
+      window.localStorage.setItem('hanndy-theme', theme);
+      isThemeChangeUserInitiatedRef.current = false;
+    }
+  }, [theme]);
 
   const { hands, fps, inferenceMs, isLoading, error, results } = useHandGesture(videoRef, isStarted);
   useEffect((): (() => void) | void => {
@@ -97,7 +120,7 @@ function App(): ReactElement {
   }, [export3D, saveImage, undo, viewMode]);
 
   return (
-    <div className="App hand-canvas-container">
+    <div className="App hand-canvas-container" data-theme={theme}>
       <div className={`app-view${isStarted ? ' app-view--visible' : ''}`}>
         {isStarted && <WebcamFeed videoRef={videoRef} />}
         {isStarted && (
@@ -144,6 +167,17 @@ function App(): ReactElement {
           onStart={(): void => setIsStarted(true)}
         />
       )}
+      <button
+        className="theme-toggle"
+        type="button"
+        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+        onClick={(): void => {
+          isThemeChangeUserInitiatedRef.current = true;
+          setTheme((current: Theme): Theme => current === 'dark' ? 'light' : 'dark');
+        }}
+      >
+        {theme === 'dark' ? '☀' : '☾'}
+      </button>
     </div>
   );
 }

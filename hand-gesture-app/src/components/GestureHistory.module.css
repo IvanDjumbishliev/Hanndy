@@ -8,8 +8,8 @@
   height: 56px;
   align-items: center;
   overflow: hidden;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.72);
+  border-top: 1px solid var(--border-color);
+  background: color-mix(in srgb, var(--bg-primary) 72%, transparent);
   backdrop-filter: blur(12px);
 }
 
@@ -42,19 +42,19 @@
 }
 
 .leftEntry {
-  border-color: rgba(0, 245, 255, 0.3);
-  background: rgba(0, 245, 255, 0.12);
-  color: #b6fcff;
+  border-color: color-mix(in srgb, var(--accent-cyan) 30%, transparent);
+  background: color-mix(in srgb, var(--accent-cyan) 12%, transparent);
+  color: var(--accent-cyan);
 }
 
 .rightEntry {
-  border-color: rgba(255, 0, 229, 0.3);
-  background: rgba(255, 0, 229, 0.12);
-  color: #ffc2f7;
+  border-color: color-mix(in srgb, var(--accent-magenta) 30%, transparent);
+  background: color-mix(in srgb, var(--accent-magenta) 12%, transparent);
+  color: var(--accent-magenta);
 }
 
 .entry time {
-  color: rgba(255, 255, 255, 0.62);
+  color: var(--text-muted);
   font-family: monospace;
   font-size: 10px;
 }
@@ -65,16 +65,16 @@
   flex: 0 0 auto;
   margin: 5px 8px 0 0;
   padding: 4px 8px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
-  color: #d7dce2;
-  background: rgba(0, 0, 0, 0.65);
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--bg-primary) 65%, transparent);
   font: inherit;
   font-size: 10px;
   cursor: pointer;
 }
 
 .clearButton:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+  background: var(--bg-card);
 }

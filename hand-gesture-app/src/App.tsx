@@ -69,7 +69,7 @@ function App(): ReactElement {
       <WebcamFeed videoRef={videoRef} />
       <LandmarkOverlay
         landmarks={results?.multiHandLandmarks[0]}
-        handedness={gesture?.handedness}
+        handedness={results?.multiHandedness[0]?.label}
         results={results}
         drawingCanvasRef={drawingCanvasRef}
         showSkeleton={showSkeleton} renderFrame={renderFrame} />

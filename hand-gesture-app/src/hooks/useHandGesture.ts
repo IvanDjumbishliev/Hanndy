@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
-import type { GestureResult } from '../types/gestures';
+import type { GestureName, GestureResult, HandLandmark } from '../types/gestures';
 import type { HandTrackingResults } from '../types/tracking';
 import { recognizeGesture } from '../gestures/recognizer';
 import '@mediapipe/hands';
+
+const SMOOTHING_WINDOW = 5;
+const DEBOUNCE_FRAMES = 5;
 
 export interface UseHandGestureResult {
   gesture: GestureResult | null;
@@ -21,9 +24,16 @@ function useHandGesture(videoRef: RefObject<HTMLVideoElement | null>): UseHandGe
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<HandTrackingResults | null>(null);
+  const landmarkBufferRef = useRef<HandLandmark[][]>([]);
+  const candidateGestureRef = useRef<GestureName | null>(null);
+  const candidateCountRef = useRef<number>(0);
 
   useEffect((): (() => void) => {
     let active = true;
+    let landmarkBufferIndex = 0;
+    landmarkBufferRef.current = [];
+    candidateGestureRef.current = null;
+    candidateCountRef.current = 0;
     const video = videoRef.current;
     if (!video) {
       queueMicrotask((): void => {
@@ -48,19 +58,62 @@ function useHandGesture(videoRef: RefObject<HTMLVideoElement | null>): UseHandGe
       minDetectionConfidence: 0.5,
       minTrackingConfidence: 0.5,
     });
+    const advanceCandidate = (gestureName: GestureName | null): number => {
+      if (candidateGestureRef.current === gestureName) {
+        candidateCountRef.current += 1;
+      } else {
+        candidateGestureRef.current = gestureName;
+        candidateCountRef.current = 1;
+      }
+      return candidateCountRef.current;
+    };
+
     hands.onResults((frame: HandTrackingResults): void => {
       if (!active) return;
-      setResults(frame);
-
-      const landmarks = frame.multiHandLandmarks[0];
+      const rawLandmarks = frame.multiHandLandmarks[0];
       const label = frame.multiHandedness[0]?.label;
-      if (!landmarks || (label !== 'Left' && label !== 'Right')) {
-        setGesture(null);
+      if (!rawLandmarks) {
+        landmarkBufferRef.current = [];
+        landmarkBufferIndex = 0;
+        const candidateCount = advanceCandidate(null);
+        setResults(frame);
+        if (candidateCount >= DEBOUNCE_FRAMES) setGesture(null);
+        return;
+      }
+
+      const landmarkBuffer = landmarkBufferRef.current;
+      landmarkBuffer[landmarkBufferIndex] = rawLandmarks;
+      landmarkBufferIndex = (landmarkBufferIndex + 1) % SMOOTHING_WINDOW;
+      const landmarks: HandLandmark[] = rawLandmarks.map((landmark, landmarkIndex): HandLandmark => {
+        const samples = landmarkBuffer
+          .map((sample: HandLandmark[]): HandLandmark | undefined => sample[landmarkIndex])
+          .filter((sample): sample is HandLandmark => sample !== undefined);
+        const sampleCount = samples.length;
+        return {
+          x: samples.reduce((sum: number, sample: HandLandmark): number => sum + sample.x, 0) / sampleCount,
+          y: samples.reduce((sum: number, sample: HandLandmark): number => sum + sample.y, 0) / sampleCount,
+          z: samples.reduce((sum: number, sample: HandLandmark): number => sum + sample.z, 0) / sampleCount,
+        };
+      });
+      setResults({
+        ...frame,
+        multiHandLandmarks: frame.multiHandLandmarks.map(
+          (handLandmarks, index) => index === 0 ? landmarks : handLandmarks,
+        ),
+      });
+
+      if (label !== 'Left' && label !== 'Right') {
+        landmarkBufferRef.current = [];
+        landmarkBufferIndex = 0;
+        const candidateCount = advanceCandidate(null);
+        if (candidateCount >= DEBOUNCE_FRAMES) setGesture(null);
         return;
       }
 
       const { name: gestureName, confidence } = recognizeGesture(landmarks);
-      setGesture({ gestureName, confidence, handedness: label, landmarks });
+      if (advanceCandidate(gestureName) >= DEBOUNCE_FRAMES) {
+        setGesture({ gestureName, confidence, handedness: label, landmarks });
+      }
     });
 
     const loadCamera = async (): Promise<MediaStream> => {

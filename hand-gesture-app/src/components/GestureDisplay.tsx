@@ -1,18 +1,7 @@
 import { memo } from 'react';
 import type { ReactElement } from 'react';
 import type { GestureResult } from '../types/gestures';
-
-const gestureEmoji: Record<GestureResult['gestureName'], string> = {
-  Fist: '✊',
-  OpenHand: '✋',
-  ThumbsUp: '👍',
-  ThumbsDown: '👎',
-  Peace: '✌️',
-  Pointing: '☝️',
-  OK: '👌',
-  Pinch: '🤏',
-  ThreeFingers: '🤟',
-};
+import { GESTURE_EMOJI } from '../gestures/emojiMap';
 
 interface GestureDisplayProps {
   gesture: GestureResult | null;
@@ -22,7 +11,7 @@ const GestureDisplay = ({ gesture }: GestureDisplayProps): ReactElement => (
   <section className="gesture-display glassmorphism" aria-live="polite">
     <span className="gesture-display__label">Current gesture</span>
     <div className="gesture-display__name">
-      <span aria-hidden="true">{gesture ? gestureEmoji[gesture.gestureName] : '👋'}</span>
+      <span aria-hidden="true">{gesture ? GESTURE_EMOJI[gesture.gestureName] : '👋'}</span>
       {gesture?.gestureName ?? 'No hand gesture'}
     </div>
     {gesture && (

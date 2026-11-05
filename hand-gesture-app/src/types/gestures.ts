@@ -7,7 +7,9 @@ export type GestureName =
   | 'Pointing'
   | 'OK'
   | 'Pinch'
-  | 'ThreeFingers';
+  | 'ThreeFingers'
+  | 'SpiderMan'
+  | 'Unknown';
 
 export interface HandLandmark {
   x: number;

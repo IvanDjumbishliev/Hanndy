@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { RefObject } from 'react';
 import type { GestureResult } from '../types/gestures';
 import type { HandTrackingResults } from '../types/tracking';
+import { recognizeGesture } from '../gestures/recognizer';
 import '@mediapipe/hands';
 
 export interface UseHandGestureResult {
@@ -12,11 +13,6 @@ export interface UseHandGestureResult {
   error: string | null;
   results: HandTrackingResults | null;
 }
-
-const pointDistance = (
-  first: HandTrackingResults['multiHandLandmarks'][number][number],
-  second: HandTrackingResults['multiHandLandmarks'][number][number],
-): number => Math.hypot(first.x - second.x, first.y - second.y);
 
 function useHandGesture(videoRef: RefObject<HTMLVideoElement | null>): UseHandGestureResult {
   const [gesture, setGesture] = useState<GestureResult | null>(null);
@@ -63,22 +59,7 @@ function useHandGesture(videoRef: RefObject<HTMLVideoElement | null>): UseHandGe
         return;
       }
 
-      const isPinching = pointDistance(landmarks[8], landmarks[4]) < 0.08;
-      const isFist = [8, 12, 16, 20].every((tipIndex: number): boolean =>
-        pointDistance(landmarks[tipIndex], landmarks[0]) < 0.12);
-      const gestureName = isPinching ? 'Pinch' : isFist ? 'Fist' : null;
-      if (!gestureName) {
-        setGesture(null);
-        return;
-      }
-
-      const confidence = isPinching
-        ? Math.max(0, Math.min(1, 1 - pointDistance(landmarks[8], landmarks[4]) / 0.08))
-        : Math.max(0, Math.min(1, 1 - [8, 12, 16, 20].reduce(
-          (sum: number, tipIndex: number): number =>
-            sum + pointDistance(landmarks[tipIndex], landmarks[0]),
-          0,
-        ) / 4 / 0.12));
+      const { name: gestureName, confidence } = recognizeGesture(landmarks);
       setGesture({ gestureName, confidence, handedness: label, landmarks });
     });
 

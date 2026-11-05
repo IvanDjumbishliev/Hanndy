@@ -9,6 +9,7 @@ import GestureDisplay from './components/GestureDisplay';
 import GestureHistory from './components/GestureHistory';
 import type { HistoryEntry } from './components/GestureHistory';
 import GestureDemo from './components/GestureDemo';
+import SplashScreen from './components/SplashScreen';
 import { GESTURE_EMOJI } from './gestures/emojiMap';
 import PerformanceStats from './components/PerformanceStats';
 import ControlPanel from './components/ControlPanel';
@@ -19,6 +20,8 @@ import './App.css';
 import './styles/DrawingSurface.css';
 
 function App(): ReactElement {
+  const [isStarted, setIsStarted] = useState<boolean>(false);
+  const [isSplashVisible, setIsSplashVisible] = useState<boolean>(true);
   const drawingCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const scene3DRef = useRef<Scene3DHandle | null>(null);
@@ -36,7 +39,12 @@ function App(): ReactElement {
   const [showHistory, setShowHistory] = useState<boolean>(false);
   const [showStats, setShowStats] = useState<boolean>(false);
 
-  const { hands, fps, inferenceMs, isLoading, error, results } = useHandGesture(videoRef);
+  const { hands, fps, inferenceMs, isLoading, error, results } = useHandGesture(videoRef, isStarted);
+  useEffect((): (() => void) | void => {
+    if (!isStarted) return;
+    const timeoutId = window.setTimeout((): void => setIsSplashVisible(false), 300);
+    return (): void => window.clearTimeout(timeoutId);
+  }, [isStarted]);
   useEffect((): void => {
     const detectedHandedness = new Set(hands.map((hand) => hand.handedness));
     for (const handedness of ['Left', 'Right'] as const) {
@@ -90,37 +98,52 @@ function App(): ReactElement {
 
   return (
     <div className="App hand-canvas-container">
-      <WebcamFeed videoRef={videoRef} />
-      <LandmarkOverlay
-        hands={overlayHands}
-        results={results}
-        drawingCanvasRef={drawingCanvasRef}
-        showSkeleton={showSkeleton} renderFrame={renderFrame} />
-      {(isLoading || error) && (
-        <div className="loading-overlay">
-          {error ? <p className="camera-error">{error}</p> : <><div className="spinner" /><p>Loading Hand Tracking Model...</p></>}
-        </div>
+      <div className={`app-view${isStarted ? ' app-view--visible' : ''}`}>
+        {isStarted && <WebcamFeed videoRef={videoRef} />}
+        {isStarted && (
+          <LandmarkOverlay
+            hands={overlayHands}
+            results={results}
+            drawingCanvasRef={drawingCanvasRef}
+            showSkeleton={showSkeleton} renderFrame={renderFrame} />
+        )}
+        {isStarted && (isLoading || error) && (
+          <div className="loading-overlay">
+            {error ? <p className="camera-error">{error}</p> : <><div className="spinner" /><p>Loading Hand Tracking Model...</p></>}
+          </div>
+        )}
+        {isStarted && (
+          <>
+            <GestureDisplay hands={hands} />
+            <GestureDemo hands={hands} />
+            {showHistory && <GestureHistory entries={historyLog} onClear={(): void => setHistoryLog([])} />}
+            {showStats && <PerformanceStats fps={fps} inferenceTime={inferenceMs} />}
+            <ControlPanel
+              activeTool={activeTool} setActiveTool={setActiveTool}
+              brushColor={brushColor} setBrushColor={setBrushColor}
+              brushSize={brushSize} setBrushSize={setBrushSize}
+              isDynamicSize={isDynamicSize} setIsDynamicSize={setIsDynamicSize}
+              viewMode={viewMode} setViewMode={setViewMode}
+              showSkeleton={showSkeleton} setShowSkeleton={setShowSkeleton}
+              isNeon={isNeon} setIsNeon={setIsNeon} showGrid={showGrid} setShowGrid={setShowGrid}
+              autoRotate={autoRotate} setAutoRotate={setAutoRotate}
+              showHistory={showHistory} setShowHistory={setShowHistory}
+              showStats={showStats} setShowStats={setShowStats}
+              undo={undo} clearCanvas={clearCanvas} saveImage={saveImage} export3D={export3D}
+            />
+            {viewMode === '3d' && <Scene3D ref={scene3DRef} lines={lines3D}
+              activeLine={activeLine3D} brushColor={brushColor} brushSize={brushSize}
+              isNeon={isNeon} showGrid={showGrid} autoRotate={autoRotate} />}
+          </>
+        )}
+      </div>
+      {isSplashVisible && (
+        <SplashScreen
+          isLoading={isStarted && isLoading}
+          isFadingOut={isStarted}
+          onStart={(): void => setIsStarted(true)}
+        />
       )}
-      <GestureDisplay hands={hands} />
-      <GestureDemo hands={hands} />
-      {showHistory && <GestureHistory entries={historyLog} onClear={(): void => setHistoryLog([])} />}
-      {showStats && <PerformanceStats fps={fps} inferenceTime={inferenceMs} />}
-      <ControlPanel
-        activeTool={activeTool} setActiveTool={setActiveTool}
-        brushColor={brushColor} setBrushColor={setBrushColor}
-        brushSize={brushSize} setBrushSize={setBrushSize}
-        isDynamicSize={isDynamicSize} setIsDynamicSize={setIsDynamicSize}
-        viewMode={viewMode} setViewMode={setViewMode}
-        showSkeleton={showSkeleton} setShowSkeleton={setShowSkeleton}
-        isNeon={isNeon} setIsNeon={setIsNeon} showGrid={showGrid} setShowGrid={setShowGrid}
-        autoRotate={autoRotate} setAutoRotate={setAutoRotate}
-        showHistory={showHistory} setShowHistory={setShowHistory}
-        showStats={showStats} setShowStats={setShowStats}
-        undo={undo} clearCanvas={clearCanvas} saveImage={saveImage} export3D={export3D}
-      />
-      {viewMode === '3d' && <Scene3D ref={scene3DRef} lines={lines3D}
-        activeLine={activeLine3D} brushColor={brushColor} brushSize={brushSize}
-        isNeon={isNeon} showGrid={showGrid} autoRotate={autoRotate} />}
     </div>
   );
 }

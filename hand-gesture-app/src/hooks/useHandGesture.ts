@@ -34,7 +34,10 @@ export interface UseHandGestureResult {
   results: HandTrackingResults | null;
 }
 
-function useHandGesture(videoRef: RefObject<HTMLVideoElement | null>): UseHandGestureResult {
+function useHandGesture(
+  videoRef: RefObject<HTMLVideoElement | null>,
+  enabled = true,
+): UseHandGestureResult {
   const [detectedHands, setDetectedHands] = useState<DetectedHand[]>([]);
   const [fps, setFps] = useState<number>(0);
   const [inferenceMs, setInferenceMs] = useState<number>(0);
@@ -47,6 +50,8 @@ function useHandGesture(videoRef: RefObject<HTMLVideoElement | null>): UseHandGe
 
   useEffect((): (() => void) => {
     let active = true;
+    if (!enabled) return (): void => { active = false; };
+
     landmarkBuffersRef.current = {};
     gestureCandidatesRef.current = {};
     confirmedHandsRef.current = {};
@@ -236,7 +241,7 @@ function useHandGesture(videoRef: RefObject<HTMLVideoElement | null>): UseHandGe
       video.srcObject = null;
       void handsModel.close();
     };
-  }, [videoRef]);
+  }, [enabled, videoRef]);
 
   return { hands: detectedHands, fps, inferenceMs, isLoading, error, results };
 }

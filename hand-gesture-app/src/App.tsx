@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import type { GestureResult } from './types/gestures';
+import type { GestureName, GestureResult } from './types/gestures';
 import type { GestureHistoryItem } from './types/tracking';
 import { useAirDrawing } from './hooks/useAirDrawing';
 import useHandGesture from './hooks/useHandGesture';
@@ -20,7 +20,7 @@ function App(): ReactElement {
   const drawingCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const scene3DRef = useRef<Scene3DHandle | null>(null);
-  const previousGestureRef = useRef<GestureResult | null>(null);
+  const previousGestureRef = useRef<Partial<Record<'Left' | 'Right', GestureName | null>>>({});
   const nextGestureId = useRef<number>(0);
   const [history, setHistory] = useState<GestureHistoryItem[]>([]);
   const [activeTool, setActiveTool] = useState<DrawingTool>('freehand');
@@ -35,14 +35,31 @@ function App(): ReactElement {
   const [showHistory, setShowHistory] = useState<boolean>(false);
   const [showStats, setShowStats] = useState<boolean>(false);
 
-  const { gesture, fps, inferenceMs, isLoading, error, results } = useHandGesture(videoRef);
+  const { hands, fps, inferenceMs, isLoading, error, results } = useHandGesture(videoRef);
   useEffect((): void => {
-    if (gesture && previousGestureRef.current?.gestureName !== gesture.gestureName) {
-      const item: GestureHistoryItem = { id: nextGestureId.current++, gesture, detectedAt: Date.now() };
-      setHistory((previous: GestureHistoryItem[]): GestureHistoryItem[] => [...previous, item].slice(-10));
+    const detectedHandedness = new Set(hands.map((hand) => hand.handedness));
+    for (const handedness of ['Left', 'Right'] as const) {
+      if (!detectedHandedness.has(handedness)) previousGestureRef.current[handedness] = null;
     }
-    previousGestureRef.current = gesture;
-  }, [gesture]);
+    const newItems: GestureHistoryItem[] = [];
+    for (const { gesture, handedness } of hands) {
+      if (previousGestureRef.current[handedness] !== gesture.gestureName) {
+        newItems.push({ id: nextGestureId.current++, gesture, detectedAt: Date.now() });
+      }
+      previousGestureRef.current[handedness] = gesture.gestureName;
+    }
+    if (newItems.length > 0) {
+      queueMicrotask((): void => {
+        setHistory((previous: GestureHistoryItem[]): GestureHistoryItem[] =>
+          [...previous, ...newItems].slice(-10));
+      });
+    }
+  }, [hands]);
+
+  const overlayHands = results?.multiHandLandmarks.flatMap((landmarks, index) => {
+    const handedness = results.multiHandedness[index]?.label;
+    return handedness === 'Left' || handedness === 'Right' ? [{ landmarks, handedness }] : [];
+  }) ?? [];
 
   const drawing = useAirDrawing({
     drawingCanvasRef, activeTool, brushColor, brushSize, isDynamicSize, viewMode,
@@ -68,8 +85,7 @@ function App(): ReactElement {
     <div className="App hand-canvas-container">
       <WebcamFeed videoRef={videoRef} />
       <LandmarkOverlay
-        landmarks={results?.multiHandLandmarks[0]}
-        handedness={results?.multiHandedness[0]?.label}
+        hands={overlayHands}
         results={results}
         drawingCanvasRef={drawingCanvasRef}
         showSkeleton={showSkeleton} renderFrame={renderFrame} />
@@ -78,7 +94,7 @@ function App(): ReactElement {
           {error ? <p className="camera-error">{error}</p> : <><div className="spinner" /><p>Loading Hand Tracking Model...</p></>}
         </div>
       )}
-      <GestureDisplay gesture={gesture} />
+      <GestureDisplay hands={hands} />
       {showHistory && <GestureHistory items={history} />}
       {showStats && <PerformanceStats fps={fps} inferenceTime={inferenceMs} />}
       <ControlPanel

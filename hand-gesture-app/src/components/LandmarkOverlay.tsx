@@ -4,8 +4,7 @@ import type { HandLandmark } from '../types/gestures';
 import type { FrameRenderer, HandTrackingResults } from '../types/tracking';
 
 interface LandmarkOverlayProps {
-  landmarks?: HandLandmark[];
-  handedness?: 'Left' | 'Right';
+  hands: Array<{ landmarks: HandLandmark[]; handedness: 'Left' | 'Right' }>;
   results?: HandTrackingResults | null;
   drawingCanvasRef?: RefObject<HTMLCanvasElement | null>;
   showSkeleton?: boolean;
@@ -24,8 +23,7 @@ const HAND_CONNECTIONS: ReadonlyArray<readonly [number, number]> = [
 const FINGERTIP_INDICES = new Set<number>([4, 8, 12, 16, 20]);
 
 const LandmarkOverlay = ({
-  landmarks,
-  handedness,
+  hands,
   results,
   drawingCanvasRef,
   showSkeleton = true,
@@ -59,8 +57,11 @@ const LandmarkOverlay = ({
 
     context.clearRect(0, 0, canvas.width, canvas.height);
     const drawSkeleton = (): void => {
-      if (showSkeleton && landmarks && landmarks.length >= 21 && handedness) {
-        drawSciFiHand(context, landmarks, handedness, canvas.width, canvas.height);
+      if (!showSkeleton) return;
+      for (const hand of hands) {
+        if (hand.landmarks.length >= 21) {
+          drawSciFiHand(context, hand.landmarks, hand.handedness, canvas.width, canvas.height);
+        }
       }
     };
     if (results && drawingCanvasRef?.current && renderFrame) {
@@ -68,7 +69,7 @@ const LandmarkOverlay = ({
     } else {
       drawSkeleton();
     }
-  }, [drawingCanvasRef, handedness, landmarks, renderFrame, results, showSkeleton]);
+  }, [drawingCanvasRef, hands, renderFrame, results, showSkeleton]);
 
   return (
     <>

@@ -8,8 +8,25 @@ import '@mediapipe/hands';
 const SMOOTHING_WINDOW = 5;
 const DEBOUNCE_FRAMES = 5;
 
+type Handedness = 'Left' | 'Right';
+
+interface DetectedHand {
+  gesture: GestureResult;
+  handedness: Handedness;
+}
+
+interface LandmarkBuffer {
+  landmarks: HandLandmark[][];
+  nextIndex: number;
+}
+
+interface GestureCandidate {
+  name: GestureName | null;
+  count: number;
+}
+
 export interface UseHandGestureResult {
-  gesture: GestureResult | null;
+  hands: DetectedHand[];
   fps: number;
   inferenceMs: number;
   isLoading: boolean;
@@ -18,22 +35,21 @@ export interface UseHandGestureResult {
 }
 
 function useHandGesture(videoRef: RefObject<HTMLVideoElement | null>): UseHandGestureResult {
-  const [gesture, setGesture] = useState<GestureResult | null>(null);
+  const [detectedHands, setDetectedHands] = useState<DetectedHand[]>([]);
   const [fps, setFps] = useState<number>(0);
   const [inferenceMs, setInferenceMs] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<HandTrackingResults | null>(null);
-  const landmarkBufferRef = useRef<HandLandmark[][]>([]);
-  const candidateGestureRef = useRef<GestureName | null>(null);
-  const candidateCountRef = useRef<number>(0);
+  const landmarkBuffersRef = useRef<Partial<Record<Handedness, LandmarkBuffer>>>({});
+  const gestureCandidatesRef = useRef<Partial<Record<Handedness, GestureCandidate>>>({});
+  const confirmedHandsRef = useRef<Partial<Record<Handedness, DetectedHand>>>({});
 
   useEffect((): (() => void) => {
     let active = true;
-    let landmarkBufferIndex = 0;
-    landmarkBufferRef.current = [];
-    candidateGestureRef.current = null;
-    candidateCountRef.current = 0;
+    landmarkBuffersRef.current = {};
+    gestureCandidatesRef.current = {};
+    confirmedHandsRef.current = {};
     const video = videoRef.current;
     if (!video) {
       queueMicrotask((): void => {
@@ -48,44 +64,36 @@ function useHandGesture(videoRef: RefObject<HTMLVideoElement | null>): UseHandGe
     let animationFrameId: number | null = null;
     let stream: MediaStream | null = null;
     const inferenceTimes: number[] = [];
-    const hands = new window.Hands({
+    const handsModel = new window.Hands({
       locateFile: (file: string): string => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
     });
 
-    hands.setOptions({
+    handsModel.setOptions({
       maxNumHands: 2,
       modelComplexity: 1,
       minDetectionConfidence: 0.5,
       minTrackingConfidence: 0.5,
     });
-    const advanceCandidate = (gestureName: GestureName | null): number => {
-      if (candidateGestureRef.current === gestureName) {
-        candidateCountRef.current += 1;
+    const advanceCandidate = (handedness: Handedness, gestureName: GestureName | null): number => {
+      const previous = gestureCandidatesRef.current[handedness];
+      if (previous?.name === gestureName) {
+        previous.count += 1;
       } else {
-        candidateGestureRef.current = gestureName;
-        candidateCountRef.current = 1;
+        gestureCandidatesRef.current[handedness] = { name: gestureName, count: 1 };
       }
-      return candidateCountRef.current;
+      return gestureCandidatesRef.current[handedness]?.count ?? 0;
     };
 
-    hands.onResults((frame: HandTrackingResults): void => {
-      if (!active) return;
-      const rawLandmarks = frame.multiHandLandmarks[0];
-      const label = frame.multiHandedness[0]?.label;
-      if (!rawLandmarks) {
-        landmarkBufferRef.current = [];
-        landmarkBufferIndex = 0;
-        const candidateCount = advanceCandidate(null);
-        setResults(frame);
-        if (candidateCount >= DEBOUNCE_FRAMES) setGesture(null);
-        return;
+    const smoothLandmarks = (handedness: Handedness, rawLandmarks: HandLandmark[]): HandLandmark[] => {
+      let buffer = landmarkBuffersRef.current[handedness];
+      if (!buffer) {
+        buffer = { landmarks: [], nextIndex: 0 };
+        landmarkBuffersRef.current[handedness] = buffer;
       }
-
-      const landmarkBuffer = landmarkBufferRef.current;
-      landmarkBuffer[landmarkBufferIndex] = rawLandmarks;
-      landmarkBufferIndex = (landmarkBufferIndex + 1) % SMOOTHING_WINDOW;
-      const landmarks: HandLandmark[] = rawLandmarks.map((landmark, landmarkIndex): HandLandmark => {
-        const samples = landmarkBuffer
+      buffer.landmarks[buffer.nextIndex] = rawLandmarks;
+      buffer.nextIndex = (buffer.nextIndex + 1) % SMOOTHING_WINDOW;
+      return rawLandmarks.map((landmark, landmarkIndex): HandLandmark => {
+        const samples = buffer.landmarks
           .map((sample: HandLandmark[]): HandLandmark | undefined => sample[landmarkIndex])
           .filter((sample): sample is HandLandmark => sample !== undefined);
         const sampleCount = samples.length;
@@ -95,25 +103,46 @@ function useHandGesture(videoRef: RefObject<HTMLVideoElement | null>): UseHandGe
           z: samples.reduce((sum: number, sample: HandLandmark): number => sum + sample.z, 0) / sampleCount,
         };
       });
+    };
+
+    handsModel.onResults((frame: HandTrackingResults): void => {
+      if (!active) return;
+      const smoothedLandmarks = frame.multiHandLandmarks.map((rawLandmarks, index) => {
+        const label = frame.multiHandedness[index]?.label;
+        return label === 'Left' || label === 'Right'
+          ? smoothLandmarks(label, rawLandmarks)
+          : rawLandmarks;
+      });
       setResults({
         ...frame,
-        multiHandLandmarks: frame.multiHandLandmarks.map(
-          (handLandmarks, index) => index === 0 ? landmarks : handLandmarks,
-        ),
+        multiHandLandmarks: smoothedLandmarks,
       });
 
-      if (label !== 'Left' && label !== 'Right') {
-        landmarkBufferRef.current = [];
-        landmarkBufferIndex = 0;
-        const candidateCount = advanceCandidate(null);
-        if (candidateCount >= DEBOUNCE_FRAMES) setGesture(null);
-        return;
+      const visibleHands = new Set<Handedness>();
+      for (const [index, landmarks] of smoothedLandmarks.entries()) {
+        const handedness = frame.multiHandedness[index]?.label;
+        if (handedness !== 'Left' && handedness !== 'Right') continue;
+        visibleHands.add(handedness);
+        const { name: gestureName, confidence } = recognizeGesture(landmarks);
+        if (advanceCandidate(handedness, gestureName) >= DEBOUNCE_FRAMES) {
+          const gesture: GestureResult = { gestureName, confidence, handedness, landmarks };
+          confirmedHandsRef.current[handedness] = { gesture, handedness };
+        }
       }
 
-      const { name: gestureName, confidence } = recognizeGesture(landmarks);
-      if (advanceCandidate(gestureName) >= DEBOUNCE_FRAMES) {
-        setGesture({ gestureName, confidence, handedness: label, landmarks });
+      for (const handedness of ['Left', 'Right'] as const) {
+        if (visibleHands.has(handedness)) continue;
+        delete landmarkBuffersRef.current[handedness];
+        if (advanceCandidate(handedness, null) >= DEBOUNCE_FRAMES) {
+          delete confirmedHandsRef.current[handedness];
+        }
       }
+
+      setDetectedHands(
+        (['Left', 'Right'] as const)
+          .map((handedness) => confirmedHandsRef.current[handedness])
+          .filter((hand): hand is DetectedHand => hand !== undefined),
+      );
     });
 
     const loadCamera = async (): Promise<MediaStream> => {
@@ -137,7 +166,7 @@ function useHandGesture(videoRef: RefObject<HTMLVideoElement | null>): UseHandGe
       if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
         const start = performance.now();
         try {
-          await hands.send({ image: video });
+          await handsModel.send({ image: video });
         } catch (inferenceError: unknown) {
           if (active) {
             setError(
@@ -157,7 +186,7 @@ function useHandGesture(videoRef: RefObject<HTMLVideoElement | null>): UseHandGe
     };
 
     const start = async (): Promise<void> => {
-      const modelPromise = hands.initialize().then((): boolean => {
+      const modelPromise = handsModel.initialize().then((): boolean => {
         if (active) setIsLoading(false);
         return true;
       }).catch((modelError: unknown): boolean => {
@@ -205,11 +234,11 @@ function useHandGesture(videoRef: RefObject<HTMLVideoElement | null>): UseHandGe
       if (animationFrameId !== null) window.cancelAnimationFrame(animationFrameId);
       stream?.getTracks().forEach((track: MediaStreamTrack): void => track.stop());
       video.srcObject = null;
-      void hands.close();
+      void handsModel.close();
     };
   }, [videoRef]);
 
-  return { gesture, fps, inferenceMs, isLoading, error, results };
+  return { hands: detectedHands, fps, inferenceMs, isLoading, error, results };
 }
 
 export default useHandGesture;

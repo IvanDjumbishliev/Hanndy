@@ -4,32 +4,48 @@ import type { GestureResult } from '../types/gestures';
 import { GESTURE_EMOJI } from '../gestures/emojiMap';
 
 interface GestureDisplayProps {
-  gesture: GestureResult | null;
+  hands: Array<{ gesture: GestureResult; handedness: 'Left' | 'Right' }>;
 }
 
-const GestureDisplay = ({ gesture }: GestureDisplayProps): ReactElement => (
-  <section className="gesture-display glassmorphism" aria-live="polite">
-    <span className="gesture-display__label">Current gesture</span>
-    <div className="gesture-display__name">
-      <span aria-hidden="true">{gesture ? GESTURE_EMOJI[gesture.gestureName] : '👋'}</span>
-      {gesture?.gestureName ?? 'No hand gesture'}
-    </div>
-    {gesture && (
-      <>
-        <div className="gesture-display__meta">{gesture.handedness} hand · heuristic match</div>
+const handColors: Record<'Left' | 'Right', string> = {
+  Left: '#00f5ff',
+  Right: '#ff00e5',
+};
+
+const GestureDisplay = ({ hands }: GestureDisplayProps): ReactElement => (
+  <section className={`gesture-display${hands.length === 1 ? ' gesture-display--single' : ''}`} aria-live="polite">
+    {hands.length === 0 ? (
+      <article className="gesture-card gesture-card--placeholder">— No hand detected —</article>
+    ) : hands.map(({ gesture, handedness }) => (
+      <article className="gesture-card" key={handedness}>
+        <div className="gesture-card__hand">
+          <span
+            className="gesture-card__dot"
+            style={{ backgroundColor: handColors[handedness] }}
+            aria-hidden="true"
+          />
+          {handedness}
+        </div>
+        <div className="gesture-display__name">
+          <span aria-hidden="true">{GESTURE_EMOJI[gesture.gestureName]}</span>
+          {gesture.gestureName}
+        </div>
         <div
           className="gesture-display__track"
           role="progressbar"
-          aria-label="Gesture confidence"
+          aria-label={`${handedness} hand gesture confidence`}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(gesture.confidence * 100)}
         >
-          <div className="gesture-display__bar" style={{ width: `${gesture.confidence * 100}%` }} />
+          <div
+            className="gesture-display__bar"
+            style={{ width: `${gesture.confidence * 100}%`, backgroundColor: handColors[handedness] }}
+          />
         </div>
         <span className="gesture-display__confidence">{Math.round(gesture.confidence * 100)}% confidence</span>
-      </>
-    )}
+      </article>
+    ))}
   </section>
 );
 

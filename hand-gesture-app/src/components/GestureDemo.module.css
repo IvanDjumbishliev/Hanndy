@@ -1,0 +1,168 @@
+.panel {
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  z-index: 12;
+  width: min(300px, calc(100vw - 40px));
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  color: #eef5f7;
+  background: rgba(5, 14, 20, 0.82);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(14px);
+  text-align: left;
+  transform: translateY(-50%);
+}
+
+.title {
+  margin: 0 0 14px;
+  color: #a9faff;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.likes {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.likesValue {
+  color: #fff;
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  animation: likesPulse 280ms ease-out;
+}
+
+.likesLabel {
+  color: #c8d3d8;
+  font-size: 14px;
+}
+
+.musicStatus {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  color: #d7e2e5;
+  font-size: 13px;
+}
+
+.musicStatus span:first-child {
+  font-size: 18px;
+}
+
+.musicError {
+  display: grid;
+  gap: 6px;
+  margin: 6px 0 0;
+  color: #ff9a9a;
+  font-size: 11px;
+}
+
+.enableMusicButton {
+  justify-self: start;
+  padding: 4px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  color: #e8f7f8;
+  background: rgba(0, 245, 255, 0.12);
+  font: inherit;
+  cursor: pointer;
+}
+
+.enableMusicButton:hover {
+  background: rgba(0, 245, 255, 0.22);
+}
+
+.cursorArea {
+  position: relative;
+  height: 110px;
+  margin-top: 12px;
+  overflow: hidden;
+  border: 1px dashed rgba(0, 245, 255, 0.35);
+  border-radius: 10px;
+  background: radial-gradient(ellipse at center, rgba(0, 245, 255, 0.08), transparent 70%);
+}
+
+.cursorLabel {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  color: #9ab0b9;
+  font-size: 11px;
+}
+
+.cursorDot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #00f5ff;
+  box-shadow: 0 0 12px #00f5ff;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  transition: left 50ms linear, top 50ms linear, opacity 120ms ease;
+}
+
+.legend {
+  width: 100%;
+  margin-top: 14px;
+  border-collapse: collapse;
+  color: #d5e0e4;
+  font-size: 11px;
+}
+
+.legend caption {
+  padding-bottom: 6px;
+  color: #a9faff;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.legend td {
+  padding: 4px 2px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.legend td:last-child {
+  color: #9ab0b9;
+  text-align: right;
+}
+
+@keyframes likesPulse {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@media (max-width: 760px) {
+  .panel {
+    top: auto;
+    right: 12px;
+    bottom: 68px;
+    max-height: 55vh;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .likesValue {
+    animation-duration: 1ms;
+  }
+}

@@ -8,6 +8,7 @@ import LandmarkOverlay from './components/LandmarkOverlay';
 import GestureDisplay from './components/GestureDisplay';
 import GestureHistory from './components/GestureHistory';
 import type { HistoryEntry } from './components/GestureHistory';
+import GestureDemo from './components/GestureDemo';
 import { GESTURE_EMOJI } from './gestures/emojiMap';
 import PerformanceStats from './components/PerformanceStats';
 import ControlPanel from './components/ControlPanel';
@@ -101,6 +102,7 @@ function App(): ReactElement {
         </div>
       )}
       <GestureDisplay hands={hands} />
+      <GestureDemo hands={hands} />
       {showHistory && <GestureHistory entries={historyLog} onClear={(): void => setHistoryLog([])} />}
       {showStats && <PerformanceStats fps={fps} inferenceTime={inferenceMs} />}
       <ControlPanel

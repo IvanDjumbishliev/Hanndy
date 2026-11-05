@@ -3,57 +3,6 @@
   text-align: center;
 }
 
-.performance-stats {
-  position: absolute;
-  z-index: 20;
-  color: var(--text-primary);
-  background: color-mix(in srgb, var(--bg-secondary) 78%, transparent);
-  border: 1px solid var(--border-color);
-  border-radius: 14px;
-  padding: 14px 16px;
-  font-family: system-ui, sans-serif;
-}
-
-.performance-stats {
-  top: 170px;
-  left: 20px;
-  min-width: 160px;
-  text-align: left;
-}
-
-.performance-stats button {
-  width: 100%;
-  border: 0;
-  padding: 0;
-  color: inherit;
-  background: transparent;
-  font: inherit;
-  font-weight: 600;
-  text-align: left;
-  cursor: pointer;
-}
-
-.performance-stats dl {
-  display: grid;
-  gap: 5px;
-  margin: 10px 0 0;
-}
-
-.performance-stats dl div {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 0.85rem;
-}
-
-.performance-stats dt {
-  color: var(--text-muted);
-}
-
-.performance-stats dd {
-  margin: 0;
-}
-
 .gesture-action {
   display: flex;
   justify-content: space-between;

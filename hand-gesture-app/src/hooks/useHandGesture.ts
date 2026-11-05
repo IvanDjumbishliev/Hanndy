@@ -29,6 +29,8 @@ export interface UseHandGestureResult {
   hands: DetectedHand[];
   fps: number;
   inferenceMs: number;
+  handsDetected: number;
+  isSmoothing: boolean;
   isLoading: boolean;
   error: string | null;
   results: HandTrackingResults | null;
@@ -41,6 +43,7 @@ function useHandGesture(
   const [detectedHands, setDetectedHands] = useState<DetectedHand[]>([]);
   const [fps, setFps] = useState<number>(0);
   const [inferenceMs, setInferenceMs] = useState<number>(0);
+  const [handsDetected, setHandsDetected] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<HandTrackingResults | null>(null);
@@ -135,6 +138,7 @@ function useHandGesture(
         }
       }
 
+      setHandsDetected(visibleHands.size);
       for (const handedness of ['Left', 'Right'] as const) {
         if (visibleHands.has(handedness)) continue;
         delete landmarkBuffersRef.current[handedness];
@@ -243,7 +247,16 @@ function useHandGesture(
     };
   }, [enabled, videoRef]);
 
-  return { hands: detectedHands, fps, inferenceMs, isLoading, error, results };
+  return {
+    hands: detectedHands,
+    fps,
+    inferenceMs,
+    handsDetected,
+    isSmoothing: SMOOTHING_WINDOW > 1,
+    isLoading,
+    error,
+    results,
+  };
 }
 
 export default useHandGesture;

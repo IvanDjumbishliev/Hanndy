@@ -62,7 +62,8 @@ function App(): ReactElement {
     }
   }, [theme]);
 
-  const { hands, fps, inferenceMs, isLoading, error, results } = useHandGesture(videoRef, isStarted);
+  const { hands, fps, inferenceMs, handsDetected, isSmoothing, isLoading, error, results } =
+    useHandGesture(videoRef, isStarted);
   useEffect((): (() => void) | void => {
     if (!isStarted) return;
     const timeoutId = window.setTimeout((): void => setIsSplashVisible(false), 300);
@@ -140,7 +141,14 @@ function App(): ReactElement {
             <GestureDisplay hands={hands} />
             <GestureDemo hands={hands} />
             {showHistory && <GestureHistory entries={historyLog} onClear={(): void => setHistoryLog([])} />}
-            {showStats && <PerformanceStats fps={fps} inferenceTime={inferenceMs} />}
+            {showStats && (
+              <PerformanceStats
+                fps={fps}
+                inferenceMs={inferenceMs}
+                handsDetected={handsDetected}
+                isSmoothing={isSmoothing}
+              />
+            )}
             <ControlPanel
               activeTool={activeTool} setActiveTool={setActiveTool}
               brushColor={brushColor} setBrushColor={setBrushColor}

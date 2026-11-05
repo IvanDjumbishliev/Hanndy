@@ -1,24 +1,59 @@
 import { memo, useState } from 'react';
 import type { ReactElement } from 'react';
-import type { PerformanceMeasurement } from '../types/tracking';
+import styles from './PerformanceStats.module.css';
 
-interface PerformanceStatsProps extends PerformanceMeasurement {}
+interface PerformanceStatsProps {
+  fps: number;
+  inferenceMs: number;
+  handsDetected: number;
+  isSmoothing: boolean;
+}
 
-const PerformanceStats = ({ fps, inferenceTime }: PerformanceStatsProps): ReactElement => {
+const PerformanceStats = ({
+  fps,
+  inferenceMs,
+  handsDetected,
+  isSmoothing,
+}: PerformanceStatsProps): ReactElement => {
   const [expanded, setExpanded] = useState<boolean>(false);
+  const fpsClass = fps >= 50 ? styles.good : fps >= 25 ? styles.warning : styles.bad;
+  const inferenceClass = inferenceMs < 25 ? styles.good : inferenceMs < 50 ? styles.warning : styles.bad;
+
   return (
-    <section className="performance-stats glassmorphism">
+    <section className={styles.panel}>
       <button
+        className={styles.toggle}
         type="button"
         aria-expanded={expanded}
         onClick={(): void => setExpanded((previous: boolean): boolean => !previous)}
       >
-        Performance {expanded ? '−' : '+'}
+        📊 Stats
       </button>
       {expanded && (
-        <dl>
-          <div><dt>FPS</dt><dd>{fps.toFixed(1)}</dd></div>
-          <div><dt>Inference</dt><dd>{inferenceTime.toFixed(1)} ms</dd></div>
+        <dl className={styles.metrics}>
+          <div className={styles.metric}>
+            <dt>FPS</dt>
+            <dd>{fps.toFixed(1)}</dd>
+          </div>
+          <progress className={`${styles.bar} ${fpsClass}`} value={Math.min(fps, 60)} max={60} aria-label="FPS" />
+          <div className={styles.metric}>
+            <dt>Inference</dt>
+            <dd>{inferenceMs.toFixed(1)} ms</dd>
+          </div>
+          <progress
+            className={`${styles.bar} ${inferenceClass}`}
+            value={Math.min(inferenceMs, 50)}
+            max={50}
+            aria-label="Inference time"
+          />
+          <div className={styles.metric}>
+            <dt>Hands detected</dt>
+            <dd>{handsDetected}</dd>
+          </div>
+          <div className={styles.metric}>
+            <dt>Smoothing</dt>
+            <dd>{isSmoothing ? 'ON' : 'OFF'}</dd>
+          </div>
         </dl>
       )}
     </section>

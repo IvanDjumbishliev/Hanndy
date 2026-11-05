@@ -46,7 +46,7 @@ const ControlPanel = (props: ControlPanelProps): ReactElement => {
       <section className="control-group">
         <h3>Panels</h3>
         <PanelToggle label="Show Gesture History" checked={showHistory} onChange={setShowHistory} />
-        <PanelToggle label="Show Performance Stats" checked={showStats} onChange={setShowStats} />
+        <PanelToggle label="Show performance stats" checked={showStats} onChange={setShowStats} />
       </section>
       <section className="control-group">
         <h3>Gesture Actions</h3>

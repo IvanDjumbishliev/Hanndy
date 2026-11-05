@@ -67,7 +67,11 @@ function App(): ReactElement {
   return (
     <div className="App hand-canvas-container">
       <WebcamFeed videoRef={videoRef} />
-      <LandmarkOverlay results={results} drawingCanvasRef={drawingCanvasRef}
+      <LandmarkOverlay
+        landmarks={results?.multiHandLandmarks[0]}
+        handedness={gesture?.handedness}
+        results={results}
+        drawingCanvasRef={drawingCanvasRef}
         showSkeleton={showSkeleton} renderFrame={renderFrame} />
       {(isLoading || error) && (
         <div className="loading-overlay">

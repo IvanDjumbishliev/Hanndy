@@ -5,7 +5,7 @@ interface WebcamFeedProps {
 }
 
 const WebcamFeed = ({ videoRef }: WebcamFeedProps): ReactElement => (
-  <video ref={videoRef} className="video-feed" style={{ display: 'none' }} />
+  <video ref={videoRef} className="video-feed" />
 );
 
 export default WebcamFeed;

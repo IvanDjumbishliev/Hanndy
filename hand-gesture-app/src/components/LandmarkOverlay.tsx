@@ -1,21 +1,34 @@
 import { useEffect, useRef } from 'react';
 import type { ReactElement, RefObject } from 'react';
-import { drawHandSkeleton } from '../utils/drawingUtils';
+import type { HandLandmark } from '../types/gestures';
 import type { FrameRenderer, HandTrackingResults } from '../types/tracking';
-import '@mediapipe/drawing_utils';
-import '@mediapipe/hands';
 
 interface LandmarkOverlayProps {
-  results: HandTrackingResults | null;
-  drawingCanvasRef: RefObject<HTMLCanvasElement | null>;
-  showSkeleton: boolean;
-  renderFrame: FrameRenderer;
+  landmarks?: HandLandmark[];
+  handedness?: 'Left' | 'Right';
+  results?: HandTrackingResults | null;
+  drawingCanvasRef?: RefObject<HTMLCanvasElement | null>;
+  showSkeleton?: boolean;
+  renderFrame?: FrameRenderer;
 }
 
+const HAND_CONNECTIONS: ReadonlyArray<readonly [number, number]> = [
+  [0, 1], [1, 2], [2, 3], [3, 4],
+  [0, 5], [5, 6], [6, 7], [7, 8],
+  [5, 9], [9, 10], [10, 11], [11, 12],
+  [9, 13], [13, 14], [14, 15], [15, 16],
+  [13, 17], [17, 18], [18, 19], [19, 20],
+  [0, 17],
+];
+
+const FINGERTIP_INDICES = new Set<number>([4, 8, 12, 16, 20]);
+
 const LandmarkOverlay = ({
+  landmarks,
+  handedness,
   results,
   drawingCanvasRef,
-  showSkeleton,
+  showSkeleton = true,
   renderFrame,
 }: LandmarkOverlayProps): ReactElement => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -28,7 +41,7 @@ const LandmarkOverlay = ({
         canvasRef.current.width = width;
         canvasRef.current.height = height;
       }
-      if (drawingCanvasRef.current) {
+      if (drawingCanvasRef?.current) {
         drawingCanvasRef.current.width = width;
         drawingCanvasRef.current.height = height;
       }
@@ -40,14 +53,22 @@ const LandmarkOverlay = ({
 
   useEffect((): void => {
     const canvas = canvasRef.current;
-    const drawingCanvas = drawingCanvasRef.current;
-    if (!canvas || !drawingCanvas || !results) return;
+    if (!canvas) return;
     const context = canvas.getContext('2d');
     if (!context) return;
-    renderFrame(context, results, (): void => {
-      if (showSkeleton) drawHandSkeleton(context, results);
-    });
-  }, [drawingCanvasRef, renderFrame, results, showSkeleton]);
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    const drawSkeleton = (): void => {
+      if (showSkeleton && landmarks && landmarks.length >= 21 && handedness) {
+        drawSciFiHand(context, landmarks, handedness, canvas.width, canvas.height);
+      }
+    };
+    if (results && drawingCanvasRef?.current && renderFrame) {
+      renderFrame(context, results, drawSkeleton);
+    } else {
+      drawSkeleton();
+    }
+  }, [drawingCanvasRef, handedness, landmarks, renderFrame, results, showSkeleton]);
 
   return (
     <>
@@ -55,6 +76,50 @@ const LandmarkOverlay = ({
       <canvas ref={canvasRef} className="main-canvas" />
     </>
   );
+};
+
+const drawSciFiHand = (
+  context: CanvasRenderingContext2D,
+  landmarks: HandLandmark[],
+  handedness: 'Left' | 'Right',
+  width: number,
+  height: number,
+): void => {
+  const color = handedness === 'Left' ? '#00f5ff' : '#ff00e5';
+  context.save();
+  context.strokeStyle = color;
+  context.lineWidth = 2;
+  context.shadowColor = color;
+  context.shadowBlur = 12;
+  context.lineCap = 'round';
+  context.lineJoin = 'round';
+
+  for (const [startIndex, endIndex] of HAND_CONNECTIONS) {
+    const start = landmarks[startIndex];
+    const end = landmarks[endIndex];
+    if (!start || !end) continue;
+    context.beginPath();
+    context.moveTo(start.x * width, start.y * height);
+    context.lineTo(end.x * width, end.y * height);
+    context.stroke();
+  }
+
+  context.shadowBlur = 0;
+  for (const [index, landmark] of landmarks.entries()) {
+    const radius = FINGERTIP_INDICES.has(index) ? 6 : 4;
+    context.beginPath();
+    context.arc(landmark.x * width, landmark.y * height, radius, 0, Math.PI * 2);
+    context.fillStyle = FINGERTIP_INDICES.has(index) ? '#ffffff' : color;
+    context.fill();
+  }
+
+  const wrist = landmarks[0];
+  if (wrist) {
+    context.font = '14px monospace';
+    context.fillStyle = '#ffffff';
+    context.fillText(handedness === 'Left' ? 'L' : 'R', wrist.x * width + 8, wrist.y * height - 8);
+  }
+  context.restore();
 };
 
 export default LandmarkOverlay;

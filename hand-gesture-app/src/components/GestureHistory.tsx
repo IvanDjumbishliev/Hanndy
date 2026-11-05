@@ -1,27 +1,68 @@
-import { memo } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import type { GestureHistoryItem } from '../types/tracking';
+import type { GestureName } from '../types/gestures';
+import styles from './GestureHistory.module.css';
 
-interface GestureHistoryProps {
-  items: GestureHistoryItem[];
+export interface HistoryEntry {
+  id: string;
+  gestureName: GestureName;
+  handedness: 'Left' | 'Right';
+  emoji: string;
+  timestamp: number;
 }
 
-const GestureHistory = ({ items }: GestureHistoryProps): ReactElement => (
-  <section className="gesture-history glassmorphism" aria-label="Gesture history">
-    <h2>Gesture History</h2>
-    <ol>
-      {items.length === 0 && <li className="gesture-history__empty">Detected gestures will appear here.</li>}
-      {[...items].reverse().map((item: GestureHistoryItem) => (
-        <li key={item.id}>
-          <span>{item.gesture.gestureName}</span>
-          <span>{Math.round(item.gesture.confidence * 100)}%</span>
-          <time dateTime={new Date(item.detectedAt).toISOString()}>
-            {new Date(item.detectedAt).toLocaleTimeString()}
-          </time>
-        </li>
-      ))}
-    </ol>
-  </section>
-);
+interface GestureHistoryProps {
+  entries: HistoryEntry[];
+  onClear: () => void;
+}
+
+const formatElapsedTime = (timestamp: number, now: number): string => {
+  const elapsedSeconds = Math.max(0, Math.floor((now - timestamp) / 1000));
+  if (elapsedSeconds < 60) return `${elapsedSeconds}s ago`;
+  const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+  if (elapsedMinutes < 60) return `${elapsedMinutes}m ago`;
+  return `${Math.floor(elapsedMinutes / 60)}h ago`;
+};
+
+const GestureHistory = ({ entries, onClear }: GestureHistoryProps): ReactElement => {
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const [now, setNow] = useState<number>(0);
+
+  useEffect((): (() => void) => {
+    const initialTimeoutId = window.setTimeout((): void => setNow(Date.now()), 0);
+    const intervalId = window.setInterval((): void => setNow(Date.now()), 1000);
+    return (): void => {
+      window.clearTimeout(initialTimeoutId);
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
+  useEffect((): void => {
+    const container = scrollContainerRef.current;
+    if (container) container.scrollLeft = container.scrollWidth;
+  }, [entries]);
+
+  return (
+    <section className={styles.history} aria-label="Recent gesture history">
+      <div className={styles.entries} ref={scrollContainerRef}>
+        {entries.map((entry: HistoryEntry) => (
+          <div
+            className={`${styles.entry} ${entry.handedness === 'Left' ? styles.leftEntry : styles.rightEntry}`}
+            key={entry.id}
+          >
+            <span aria-hidden="true">{entry.emoji}</span>
+            <span>{entry.gestureName}</span>
+            <time dateTime={new Date(entry.timestamp).toISOString()}>
+              {formatElapsedTime(entry.timestamp, now)}
+            </time>
+          </div>
+        ))}
+      </div>
+      <button className={styles.clearButton} type="button" onClick={onClear}>
+        Clear history
+      </button>
+    </section>
+  );
+};
 
 export default memo(GestureHistory);

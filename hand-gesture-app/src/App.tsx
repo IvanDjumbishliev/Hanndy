@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import type { GestureName, GestureResult } from './types/gestures';
-import type { GestureHistoryItem } from './types/tracking';
 import { useAirDrawing } from './hooks/useAirDrawing';
 import useHandGesture from './hooks/useHandGesture';
 import WebcamFeed from './components/WebcamFeed';
 import LandmarkOverlay from './components/LandmarkOverlay';
 import GestureDisplay from './components/GestureDisplay';
 import GestureHistory from './components/GestureHistory';
+import type { HistoryEntry } from './components/GestureHistory';
+import { GESTURE_EMOJI } from './gestures/emojiMap';
 import PerformanceStats from './components/PerformanceStats';
 import ControlPanel from './components/ControlPanel';
 import Scene3D from './components/Scene3D';
@@ -21,8 +22,7 @@ function App(): ReactElement {
   const videoRef = useRef<HTMLVideoElement>(null);
   const scene3DRef = useRef<Scene3DHandle | null>(null);
   const previousGestureRef = useRef<Partial<Record<'Left' | 'Right', GestureName | null>>>({});
-  const nextGestureId = useRef<number>(0);
-  const [history, setHistory] = useState<GestureHistoryItem[]>([]);
+  const [historyLog, setHistoryLog] = useState<HistoryEntry[]>([]);
   const [activeTool, setActiveTool] = useState<DrawingTool>('freehand');
   const [brushColor, setBrushColor] = useState<string>('#00FF00');
   const [brushSize, setBrushSize] = useState<number>(5);
@@ -41,17 +41,23 @@ function App(): ReactElement {
     for (const handedness of ['Left', 'Right'] as const) {
       if (!detectedHandedness.has(handedness)) previousGestureRef.current[handedness] = null;
     }
-    const newItems: GestureHistoryItem[] = [];
+    const newEntries: HistoryEntry[] = [];
     for (const { gesture, handedness } of hands) {
       if (previousGestureRef.current[handedness] !== gesture.gestureName) {
-        newItems.push({ id: nextGestureId.current++, gesture, detectedAt: Date.now() });
+        newEntries.push({
+          id: crypto.randomUUID(),
+          gestureName: gesture.gestureName,
+          handedness,
+          emoji: GESTURE_EMOJI[gesture.gestureName],
+          timestamp: Date.now(),
+        });
       }
       previousGestureRef.current[handedness] = gesture.gestureName;
     }
-    if (newItems.length > 0) {
+    if (newEntries.length > 0) {
       queueMicrotask((): void => {
-        setHistory((previous: GestureHistoryItem[]): GestureHistoryItem[] =>
-          [...previous, ...newItems].slice(-10));
+        setHistoryLog((previous: HistoryEntry[]): HistoryEntry[] =>
+          [...previous, ...newEntries].slice(-20));
       });
     }
   }, [hands]);
@@ -95,7 +101,7 @@ function App(): ReactElement {
         </div>
       )}
       <GestureDisplay hands={hands} />
-      {showHistory && <GestureHistory items={history} />}
+      {showHistory && <GestureHistory entries={historyLog} onClear={(): void => setHistoryLog([])} />}
       {showStats && <PerformanceStats fps={fps} inferenceTime={inferenceMs} />}
       <ControlPanel
         activeTool={activeTool} setActiveTool={setActiveTool}

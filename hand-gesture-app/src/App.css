@@ -72,3 +72,47 @@
 .theme-toggle:hover {
   border-color: var(--accent-cyan);
 }
+
+.glitch-active {
+  animation: glitch 0.15s infinite;
+}
+
+.combo-toast {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  z-index: 110;
+  color: var(--text-primary);
+  font-size: 32px;
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 0 0 18px var(--accent-cyan);
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: comboToast 2.1s linear both;
+}
+
+@keyframes glitch {
+  0% { clip-path: inset(10% 0 85% 0); transform: translateX(4px); }
+  20% { clip-path: inset(80% 0 5% 0); transform: translateX(-3px); }
+  40% { clip-path: inset(35% 0 52% 0); transform: translateX(2px); }
+  60% { clip-path: inset(60% 0 25% 0); transform: translateX(-4px); }
+  80% { clip-path: inset(18% 0 70% 0); transform: translateX(3px); }
+  100% { clip-path: inset(45% 0 40% 0); transform: translateX(-2px); }
+}
+
+@keyframes comboToast {
+  0% {
+    opacity: 0;
+  }
+
+  9.5%,
+  81% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}

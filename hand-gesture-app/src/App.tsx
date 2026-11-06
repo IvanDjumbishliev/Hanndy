@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import type { ReactElement } from 'react';
 import type { GestureName, GestureResult } from './types/gestures';
 import { useAirDrawing } from './hooks/useAirDrawing';
+import useGestureCombo from './hooks/useGestureCombo';
 import useVoiceFeedback from './hooks/useVoiceFeedback';
 import type { VoiceFeedbackOptions } from './hooks/useVoiceFeedback';
 import useHandGesture from './hooks/useHandGesture';
@@ -19,6 +20,11 @@ import ControlPanel from './components/ControlPanel';
 import Scene3D from './components/Scene3D';
 import type { Scene3DHandle } from './components/Scene3D';
 import type { DrawingTool, DrawingViewMode } from './hooks/useAirDrawing';
+import { COMBOS } from './gestures/combos';
+import triggerConfetti from './effects/confetti';
+import { triggerFireworks } from './effects/fireworks';
+import { triggerGlitch } from './effects/glitch';
+import { triggerMatrix } from './effects/matrix';
 import './App.css';
 import './styles/DrawingSurface.css';
 
@@ -52,6 +58,7 @@ const getInitialTheme = (): Theme => {
 function App(): ReactElement {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const [bootState, setBootState] = useState<BootState>('booting');
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const [voiceFeedback, setVoiceFeedback] = useState<VoiceFeedbackOptions>({
     enabled: true,
     volume: 0.9,
@@ -88,6 +95,29 @@ function App(): ReactElement {
 
   const { hands, fps, inferenceMs, handsDetected, isSmoothing, isLoading, error, results } =
     useHandGesture(videoRef, bootState === 'ready');
+  const primaryGesture = hands.find((hand) => hand.handedness === 'Left')?.gesture.gestureName
+    ?? hands[0]?.gesture.gestureName
+    ?? null;
+  const { lastCombo, clearLastCombo } = useGestureCombo(primaryGesture, COMBOS);
+
+  useEffect((): (() => void) | void => {
+    if (!lastCombo) return;
+
+    if (lastCombo.effect === 'confetti') {
+      triggerConfetti();
+    } else if (lastCombo.effect === 'fireworks') {
+      triggerFireworks();
+    } else if (lastCombo.effect === 'matrix') {
+      triggerMatrix();
+    } else if (lastCombo.effect === 'glitch' && rootRef.current) {
+      triggerGlitch(rootRef.current);
+    }
+
+    const timeoutId = window.setTimeout(clearLastCombo, 2100);
+    return (): void => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [clearLastCombo, lastCombo]);
   useEffect((): void => {
     const detectedHandedness = new Set(hands.map((hand) => hand.handedness));
     for (const handedness of ['Left', 'Right'] as const) {
@@ -160,7 +190,7 @@ function App(): ReactElement {
   }, [export3D, saveImage, undo, viewMode]);
 
   return (
-    <div className="App hand-canvas-container" data-theme={theme}>
+    <div className="App hand-canvas-container" data-theme={theme} ref={rootRef}>
       <div className={`app-view${bootState === 'ready' ? ' app-view--visible' : ''}`}>
         {bootState === 'ready' && <WebcamFeed videoRef={videoRef} />}
         {bootState === 'ready' && (
@@ -178,6 +208,11 @@ function App(): ReactElement {
         )}
         {bootState === 'ready' && (
           <>
+            {lastCombo && (
+              <div className="combo-toast" role="status" aria-live="polite">
+                {lastCombo.label}
+              </div>
+            )}
             <GestureDisplay hands={hands} />
             <GestureDemo hands={hands} />
             {showHistory && <GestureHistory entries={historyLog} onClear={(): void => setHistoryLog([])} />}

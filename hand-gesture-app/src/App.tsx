@@ -15,7 +15,9 @@ import GestureDemo from './components/GestureDemo';
 import BootSequence from './components/BootSequence';
 import RadarSweep from './components/RadarSweep';
 import HandModel3D from './components/HandModel3D';
+import AIInterpretation from './components/AIInterpretation';
 import { GESTURE_EMOJI } from './gestures/emojiMap';
+import { interpretGestures } from './api/interpretGestures';
 import PerformanceStats from './components/PerformanceStats';
 import ControlPanel from './components/ControlPanel';
 import Scene3D from './components/Scene3D';
@@ -72,7 +74,13 @@ function App(): ReactElement {
   const scene3DRef = useRef<Scene3DHandle | null>(null);
   const previousGestureRef = useRef<Partial<Record<'Left' | 'Right', GestureName | null>>>({});
   const previousSpokenGestureRef = useRef<Partial<Record<'Left' | 'Right', GestureName | null>>>({});
+  const previousAiGestureRef = useRef<Partial<Record<'Left' | 'Right', GestureName | null>>>({});
+  const lastInterpretationCallRef = useRef<number>(0);
+  const interpretationRequestRef = useRef<number>(0);
   const [historyLog, setHistoryLog] = useState<HistoryEntry[]>([]);
+  const [recentGestures, setRecentGestures] = useState<string[]>([]);
+  const [aiText, setAiText] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState<boolean>(false);
   const [activeTool, setActiveTool] = useState<DrawingTool>('freehand');
   const [brushColor, setBrushColor] = useState<string>('#00FF00');
   const [brushSize, setBrushSize] = useState<number>(5);
@@ -100,6 +108,43 @@ function App(): ReactElement {
     ?? hands[0]?.gesture.gestureName
     ?? null;
   const { lastCombo, clearLastCombo } = useGestureCombo(primaryGesture, COMBOS);
+
+  useEffect((): void => {
+    const detectedHandedness = new Set(hands.map((hand) => hand.handedness));
+    for (const handedness of ['Left', 'Right'] as const) {
+      if (!detectedHandedness.has(handedness)) previousAiGestureRef.current[handedness] = null;
+    }
+
+    for (const { gesture, handedness } of hands) {
+      if (previousAiGestureRef.current[handedness] !== gesture.gestureName) {
+        queueMicrotask((): void => {
+          setRecentGestures((previous: string[]): string[] =>
+            [...previous, gesture.gestureName].slice(-4));
+        });
+      }
+      previousAiGestureRef.current[handedness] = gesture.gestureName;
+    }
+  }, [hands]);
+
+  useEffect((): void => {
+    if (recentGestures.length < 3) return;
+    const now = Date.now();
+    if (now - lastInterpretationCallRef.current < 4000) return;
+    lastInterpretationCallRef.current = now;
+    const requestId = interpretationRequestRef.current + 1;
+    interpretationRequestRef.current = requestId;
+    queueMicrotask((): void => setAiLoading(true));
+
+    void interpretGestures(recentGestures).then((text: string): void => {
+      if (interpretationRequestRef.current !== requestId) return;
+      setAiText(text || 'Signal unclear. Stand by.');
+      setAiLoading(false);
+    }).catch((): void => {
+      if (interpretationRequestRef.current !== requestId) return;
+      setAiText('Signal unclear. Stand by.');
+      setAiLoading(false);
+    });
+  }, [recentGestures]);
 
   useEffect((): (() => void) | void => {
     if (!lastCombo) return;
@@ -206,6 +251,7 @@ function App(): ReactElement {
         )}
         {bootState === 'ready' && <RadarSweep hands={radarHands} />}
         {bootState === 'ready' && <HandModel3D landmarks={modelLandmarks} />}
+        {bootState === 'ready' && <AIInterpretation text={aiText} loading={aiLoading} />}
         {bootState === 'ready' && (isLoading || error) && (
           <div className="loading-overlay">
             {error ? <p className="camera-error">{error}</p> : <><div className="spinner" /><p>Loading Hand Tracking Model...</p></>}

@@ -1,0 +1,75 @@
+.panel {
+  position: absolute;
+  bottom: 180px;
+  left: 20px;
+  z-index: 20;
+  box-sizing: border-box;
+  width: 280px;
+  min-height: 60px;
+  padding: 12px;
+  border: 1px solid var(--hud-panel-border);
+  border-radius: 12px;
+  color: var(--text-primary);
+  background: var(--hud-panel-background);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--hud-background) 24%, transparent);
+  backdrop-filter: blur(16px);
+  text-align: left;
+}
+
+.label {
+  margin-bottom: 8px;
+  color: var(--accent-cyan);
+  font-family: monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.text {
+  min-height: 1.5em;
+  margin: 0;
+  font-family: monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.loading {
+  display: inline-flex;
+  gap: 3px;
+  color: var(--accent-cyan);
+}
+
+.loading span {
+  animation: dotPulse 900ms ease-in-out infinite;
+}
+
+.loading span:nth-child(2) {
+  animation-delay: 150ms;
+}
+
+.loading span:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+@keyframes dotPulse {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+  }
+
+  30% {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 600px) {
+  .panel {
+    bottom: 250px;
+    left: 12px;
+    width: min(280px, calc(100vw - 24px));
+  }
+}

@@ -9,7 +9,7 @@
   color: var(--text-primary);
   background:
     radial-gradient(ellipse at center, color-mix(in srgb, var(--accent-cyan) 9%, transparent), transparent 58%),
-    var(--bg-primary);
+    var(--hud-background);
   opacity: 1;
   transition: opacity 300ms ease;
 }

@@ -1,11 +1,16 @@
 .panel {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  z-index: 1100;
+  top: 20px;
+  left: 20px;
+  z-index: 20;
   width: 200px;
+  padding: 8px;
+  border: 1px solid var(--hud-panel-border);
+  border-radius: 12px;
   color: var(--text-primary);
+  background: var(--hud-panel-background);
   font-family: system-ui, sans-serif;
+  backdrop-filter: blur(16px);
 }
 
 .toggle {
@@ -13,7 +18,7 @@
   border: 1px solid var(--border-color);
   border-radius: 999px;
   color: var(--text-primary);
-  background: color-mix(in srgb, var(--bg-primary) 76%, transparent);
+  background: transparent;
   font: inherit;
   font-size: 12px;
   cursor: pointer;
@@ -29,9 +34,9 @@
   gap: 7px;
   margin: 8px 0 0;
   padding: 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--bg-secondary) 88%, transparent);
+  border: 1px solid var(--hud-panel-border);
+  border-radius: 8px;
+  background: var(--hud-panel-background);
   box-shadow: 0 8px 24px color-mix(in srgb, var(--bg-primary) 24%, transparent);
   backdrop-filter: blur(12px);
 }
@@ -63,12 +68,12 @@
   appearance: none;
   border: 0;
   border-radius: 999px;
-  background: var(--bg-primary);
+  background: var(--hud-track-background);
 }
 
 .bar::-webkit-progress-bar {
   border-radius: 999px;
-  background: var(--bg-primary);
+  background: var(--hud-track-background);
 }
 
 .bar::-webkit-progress-value {

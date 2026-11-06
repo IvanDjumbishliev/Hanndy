@@ -23,7 +23,7 @@
   justify-items: center;
   gap: 12px;
   color: var(--text-primary);
-  background: color-mix(in srgb, var(--bg-primary) 76%, transparent);
+  background: color-mix(in srgb, var(--hud-background) 76%, transparent);
   font-family: system-ui, sans-serif;
 }
 
@@ -53,20 +53,20 @@
 
 .theme-toggle {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 120;
+  top: 20px;
+  right: 20px;
+  z-index: 20;
   display: grid;
   width: 42px;
   height: 42px;
   place-items: center;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--hud-panel-border);
   border-radius: 50%;
   color: var(--text-primary);
-  background: var(--bg-card);
+  background: var(--hud-panel-background);
   font-size: 23px;
   cursor: pointer;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(16px);
 }
 
 .theme-toggle:hover {

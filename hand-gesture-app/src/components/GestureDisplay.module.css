@@ -1,6 +1,6 @@
 .display {
   position: absolute;
-  top: 20px;
+  bottom: 100px;
   left: 50%;
   z-index: 20;
   display: grid;
@@ -16,10 +16,10 @@
   align-items: center;
   padding: 20px 24px;
   color: var(--text-primary);
-  background: color-mix(in srgb, var(--bg-primary) 70%, transparent);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  backdrop-filter: blur(12px);
+  background: var(--hud-panel-background);
+  border: 1px solid var(--hud-panel-border);
+  border-radius: 12px;
+  backdrop-filter: blur(16px);
   animation: cardEntry 200ms ease-out both;
 }
 
@@ -70,12 +70,12 @@
   appearance: none;
   border: 0;
   border-radius: 3px;
-  background: var(--bg-secondary);
+  background: var(--hud-track-background);
 }
 
 .confidenceTrack::-webkit-progress-bar {
   border-radius: 3px;
-  background: var(--bg-secondary);
+  background: var(--hud-track-background);
 }
 
 .confidenceTrack::-webkit-progress-value {
@@ -115,8 +115,8 @@
   grid-column: 1 / -1;
   min-width: 220px;
   color: var(--text-muted);
-  background: color-mix(in srgb, var(--bg-primary) 62%, transparent);
-  border-color: color-mix(in srgb, var(--border-color) 70%, transparent);
+  background: var(--hud-panel-background);
+  border-color: var(--hud-panel-border);
 }
 
 .placeholder .emoji {

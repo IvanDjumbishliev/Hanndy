@@ -1,10 +1,11 @@
 
 .hand-canvas-container {
   position: relative;
-  width: 100%;
+  width: 100vw;
   height: 100vh;
-  background-color: var(--bg-secondary);
+  background-color: var(--hud-background);
   overflow: hidden;
+  box-shadow: var(--hud-viewport-glow);
 }
 
 .app-view {
@@ -20,20 +21,26 @@
 
 .video-feed {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.5;
   transform: scaleX(-1);
   z-index: 0;
 }
 
+.app-view::after {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: var(--hud-vignette);
+  content: '';
+  pointer-events: none;
+}
+
 .drawing-canvas {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
@@ -41,13 +48,12 @@
 
 .main-canvas {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   transform: scaleX(-1);
   pointer-events: none;
-  z-index: 1;
+  z-index: 10;
 }
 
 .ui-overlay {

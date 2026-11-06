@@ -1,7 +1,7 @@
 :root {
   --bg-primary: #0d0d0d;
   --bg-secondary: #1a1a1a;
-  --bg-card: rgba(255, 255, 255, 0.05);
+  --bg-card: rgba(0, 245, 255, 0.05);
   --text-primary: #ffffff;
   --text-muted: #888888;
   --accent-cyan: #00f5ff;
@@ -11,13 +11,19 @@
   --accent-warning: #f5cc36;
   --accent-danger: #ff4d5e;
   --text-on-accent: #0d0d0d;
+  --hud-background: #000;
+  --hud-panel-background: rgba(0, 20, 30, 0.6);
+  --hud-panel-border: rgba(0, 245, 255, 0.2);
+  --hud-vignette: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.7) 100%);
+  --hud-track-background: rgba(0, 20, 30, 0.9);
+  --hud-viewport-glow: inset 0 0 60px rgba(0, 245, 255, 0.05);
 
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: dark;
   color: var(--text-primary);
-  background-color: var(--bg-primary);
+  background-color: var(--hud-background);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -25,32 +31,33 @@
 }
 
 :root[data-theme='light'] {
-  --bg-primary: #f0f0f0;
-  --bg-secondary: #ffffff;
-  --bg-card: rgba(0, 0, 0, 0.05);
-  --text-primary: #111111;
-  --text-muted: #555555;
-  --accent-cyan: #0099aa;
-  --accent-magenta: #cc00bb;
-  --border-color: rgba(0, 0, 0, 0.1);
-  --accent-success: #167943;
-  --accent-warning: #a87300;
-  --accent-danger: #c62838;
-  --text-on-accent: #111111;
-  color-scheme: light;
+  --bg-primary: #000;
+  --bg-secondary: #0a1a21;
+  --bg-card: rgba(0, 245, 255, 0.05);
+  --text-primary: #eafaff;
+  --text-muted: #9ab7bf;
+  --accent-cyan: #38e8f4;
+  --accent-magenta: #f05bdc;
+  --border-color: rgba(0, 245, 255, 0.2);
+  --accent-success: #20d97a;
+  --accent-warning: #f5cc36;
+  --accent-danger: #ff4d5e;
+  --text-on-accent: #00141e;
+  color-scheme: dark;
 }
 
 html,
 body,
 #root {
-  min-height: 100%;
-  background-color: var(--bg-primary);
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  background-color: var(--hud-background);
 }
 
 body {
-  margin: 0;
-  padding: 0;
   min-width: 320px;
-  min-height: 100vh;
   color: var(--text-primary);
 }

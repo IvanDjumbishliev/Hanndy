@@ -14,6 +14,7 @@ import type { HistoryEntry } from './components/GestureHistory';
 import GestureDemo from './components/GestureDemo';
 import BootSequence from './components/BootSequence';
 import RadarSweep from './components/RadarSweep';
+import HandModel3D from './components/HandModel3D';
 import { GESTURE_EMOJI } from './gestures/emojiMap';
 import PerformanceStats from './components/PerformanceStats';
 import ControlPanel from './components/ControlPanel';
@@ -168,6 +169,9 @@ function App(): ReactElement {
       ? [{ wristX: (1 - wrist.x) * window.innerWidth, wristY: wrist.y * window.innerHeight }]
       : [];
   });
+  const modelLandmarks = hands.find((hand) => hand.handedness === 'Left')?.gesture.landmarks
+    ?? hands[0]?.gesture.landmarks
+    ?? null;
 
   const drawing = useAirDrawing({
     drawingCanvasRef, activeTool, brushColor, brushSize, isDynamicSize, viewMode,
@@ -201,6 +205,7 @@ function App(): ReactElement {
             showSkeleton={showSkeleton} renderFrame={renderFrame} />
         )}
         {bootState === 'ready' && <RadarSweep hands={radarHands} />}
+        {bootState === 'ready' && <HandModel3D landmarks={modelLandmarks} />}
         {bootState === 'ready' && (isLoading || error) && (
           <div className="loading-overlay">
             {error ? <p className="camera-error">{error}</p> : <><div className="spinner" /><p>Loading Hand Tracking Model...</p></>}

@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react';
 import type { ReactElement, RefObject } from 'react';
 import type { HandLandmark } from '../types/gestures';
 import type { FrameRenderer, HandTrackingResults } from '../types/tracking';
+import useParticleTrail from '../hooks/useParticleTrail';
+import type { Particle } from '../hooks/useParticleTrail';
 
 interface LandmarkOverlayProps {
   hands: Array<{ landmarks: HandLandmark[]; handedness: 'Left' | 'Right' }>;
@@ -30,6 +32,7 @@ const LandmarkOverlay = ({
   renderFrame,
 }: LandmarkOverlayProps): ReactElement => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const { particles, addParticle, tickParticles } = useParticleTrail();
 
   useEffect((): (() => void) => {
     const resizeCanvas = (): void => {
@@ -55,7 +58,22 @@ const LandmarkOverlay = ({
     const context = canvas.getContext('2d');
     if (!context) return;
 
-    context.clearRect(0, 0, canvas.width, canvas.height);
+    tickParticles();
+    for (const hand of hands) {
+      const color = getHandColor(hand.handedness);
+      const indexTip = hand.landmarks[8];
+      const thumbTip = hand.landmarks[4];
+      if (indexTip) {
+        addParticle(indexTip.x * canvas.width, indexTip.y * canvas.height, color);
+      }
+      if (thumbTip) {
+        addParticle(thumbTip.x * canvas.width, thumbTip.y * canvas.height, color, 0.5, 3);
+      }
+    }
+
+    const drawParticles = (): void => {
+      for (const particle of particles.current) drawParticle(context, particle);
+    };
     const drawSkeleton = (): void => {
       if (!showSkeleton) return;
       for (const hand of hands) {
@@ -65,11 +83,16 @@ const LandmarkOverlay = ({
       }
     };
     if (results && drawingCanvasRef?.current && renderFrame) {
-      renderFrame(context, results, drawSkeleton);
+      renderFrame(context, results, (): void => {
+        drawParticles();
+        drawSkeleton();
+      });
     } else {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      drawParticles();
       drawSkeleton();
     }
-  }, [drawingCanvasRef, hands, renderFrame, results, showSkeleton]);
+  }, [addParticle, drawingCanvasRef, hands, particles, renderFrame, results, showSkeleton, tickParticles]);
 
   return (
     <>
@@ -79,6 +102,21 @@ const LandmarkOverlay = ({
   );
 };
 
+const getHandColor = (handedness: 'Left' | 'Right'): string =>
+  handedness === 'Left' ? '#00f5ff' : '#ff00e5';
+
+const drawParticle = (context: CanvasRenderingContext2D, particle: Particle): void => {
+  context.save();
+  context.globalAlpha = particle.alpha;
+  context.shadowBlur = 12;
+  context.shadowColor = particle.color;
+  context.fillStyle = particle.color;
+  context.beginPath();
+  context.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+  context.fill();
+  context.restore();
+};
+
 const drawSciFiHand = (
   context: CanvasRenderingContext2D,
   landmarks: HandLandmark[],
@@ -86,7 +124,7 @@ const drawSciFiHand = (
   width: number,
   height: number,
 ): void => {
-  const color = handedness === 'Left' ? '#00f5ff' : '#ff00e5';
+  const color = getHandColor(handedness);
   context.save();
   context.strokeStyle = color;
   context.lineWidth = 2;

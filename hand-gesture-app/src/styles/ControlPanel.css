@@ -117,6 +117,28 @@
     accent-color: var(--primary);
 }
 
+.voice-volume {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    color: var(--text-main);
+    font-size: 0.9rem;
+}
+
+.voice-volume input[type="range"] {
+    min-width: 0;
+    flex: 1;
+    accent-color: var(--primary);
+}
+
+.voice-volume output {
+    min-width: 36px;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    text-align: right;
+}
+
 .size-value {
     font-size: 0.85rem;
     min-width: 40px;

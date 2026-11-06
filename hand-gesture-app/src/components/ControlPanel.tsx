@@ -18,6 +18,10 @@ interface ControlPanelProps extends DrawingControlsProps {
   setShowHistory: Dispatch<SetStateAction<boolean>>;
   showStats: boolean;
   setShowStats: Dispatch<SetStateAction<boolean>>;
+  voiceEnabled: boolean;
+  setVoiceEnabled: Dispatch<SetStateAction<boolean>>;
+  voiceVolume: number;
+  setVoiceVolume: Dispatch<SetStateAction<number>>;
   undo: () => void;
   clearCanvas: () => void;
   saveImage: () => void;
@@ -47,6 +51,27 @@ const ControlPanel = (props: ControlPanelProps): ReactElement => {
         <h3>Panels</h3>
         <PanelToggle label="Show Gesture History" checked={showHistory} onChange={setShowHistory} />
         <PanelToggle label="Show performance stats" checked={showStats} onChange={setShowStats} />
+      </section>
+      <section className="control-group">
+        <h3>Audio</h3>
+        <PanelToggle
+          label="Voice feedback"
+          checked={props.voiceEnabled}
+          onChange={props.setVoiceEnabled}
+        />
+        <label className="voice-volume">
+          <span>Volume</span>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            step="10"
+            value={props.voiceVolume}
+            onChange={(event: ChangeEvent<HTMLInputElement>): void =>
+              props.setVoiceVolume(Number(event.target.value))}
+          />
+          <output>{props.voiceVolume}%</output>
+        </label>
       </section>
       <section className="control-group">
         <h3>Gesture Actions</h3>

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import type { ReactElement } from 'react';
 import type { GestureName, GestureResult } from './types/gestures';
 import { useAirDrawing } from './hooks/useAirDrawing';
+import useVoiceFeedback from './hooks/useVoiceFeedback';
+import type { VoiceFeedbackOptions } from './hooks/useVoiceFeedback';
 import useHandGesture from './hooks/useHandGesture';
 import WebcamFeed from './components/WebcamFeed';
 import LandmarkOverlay from './components/LandmarkOverlay';
@@ -22,6 +24,19 @@ import './styles/DrawingSurface.css';
 type Theme = 'dark' | 'light';
 type BootState = 'booting' | 'ready';
 
+const GESTURE_PHRASES: Partial<Record<GestureName, string>> = {
+  Fist: 'Fist detected',
+  OpenHand: 'Open hand',
+  ThumbsUp: 'Positive',
+  ThumbsDown: 'Negative',
+  Peace: 'Peace sign',
+  Pointing: 'Pointing',
+  OK: 'OK confirmed',
+  Pinch: 'Pinch',
+  ThreeFingers: 'Three',
+  SpiderMan: 'Spider-Man',
+};
+
 const getInitialTheme = (): Theme => {
   if (typeof window === 'undefined') return 'dark';
   try {
@@ -36,11 +51,18 @@ const getInitialTheme = (): Theme => {
 function App(): ReactElement {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const [bootState, setBootState] = useState<BootState>('booting');
+  const [voiceFeedback, setVoiceFeedback] = useState<VoiceFeedbackOptions>({
+    enabled: true,
+    volume: 0.9,
+    rate: 0.85,
+    pitch: 0.6,
+  });
   const isThemeChangeUserInitiatedRef = useRef<boolean>(false);
   const drawingCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const scene3DRef = useRef<Scene3DHandle | null>(null);
   const previousGestureRef = useRef<Partial<Record<'Left' | 'Right', GestureName | null>>>({});
+  const previousSpokenGestureRef = useRef<Partial<Record<'Left' | 'Right', GestureName | null>>>({});
   const [historyLog, setHistoryLog] = useState<HistoryEntry[]>([]);
   const [activeTool, setActiveTool] = useState<DrawingTool>('freehand');
   const [brushColor, setBrushColor] = useState<string>('#00FF00');
@@ -53,6 +75,7 @@ function App(): ReactElement {
   const [autoRotate, setAutoRotate] = useState<boolean>(false);
   const [showHistory, setShowHistory] = useState<boolean>(false);
   const [showStats, setShowStats] = useState<boolean>(false);
+  const { speak } = useVoiceFeedback(voiceFeedback);
 
   useLayoutEffect((): void => {
     document.documentElement.dataset.theme = theme;
@@ -64,6 +87,20 @@ function App(): ReactElement {
 
   const { hands, fps, inferenceMs, handsDetected, isSmoothing, isLoading, error, results } =
     useHandGesture(videoRef, bootState === 'ready');
+  useEffect((): void => {
+    const detectedHandedness = new Set(hands.map((hand) => hand.handedness));
+    for (const handedness of ['Left', 'Right'] as const) {
+      if (!detectedHandedness.has(handedness)) previousSpokenGestureRef.current[handedness] = null;
+    }
+    for (const { gesture, handedness } of hands) {
+      if (previousSpokenGestureRef.current[handedness] !== gesture.gestureName) {
+        const phrase = GESTURE_PHRASES[gesture.gestureName];
+        if (phrase) speak(phrase);
+      }
+      previousSpokenGestureRef.current[handedness] = gesture.gestureName;
+    }
+  }, [hands, speak]);
+
   useEffect((): void => {
     const detectedHandedness = new Set(hands.map((hand) => hand.handedness));
     for (const handedness of ['Left', 'Right'] as const) {
@@ -155,6 +192,11 @@ function App(): ReactElement {
               autoRotate={autoRotate} setAutoRotate={setAutoRotate}
               showHistory={showHistory} setShowHistory={setShowHistory}
               showStats={showStats} setShowStats={setShowStats}
+              voiceEnabled={voiceFeedback.enabled}
+              setVoiceEnabled={(enabled): void => setVoiceFeedback((previous) => ({ ...previous, enabled }))}
+              voiceVolume={Math.round(voiceFeedback.volume * 100)}
+              setVoiceVolume={(volume): void =>
+                setVoiceFeedback((previous) => ({ ...previous, volume: volume / 100 }))}
               undo={undo} clearCanvas={clearCanvas} saveImage={saveImage} export3D={export3D}
             />
             {viewMode === '3d' && <Scene3D ref={scene3DRef} lines={lines3D}

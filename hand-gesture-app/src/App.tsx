@@ -12,6 +12,7 @@ import GestureHistory from './components/GestureHistory';
 import type { HistoryEntry } from './components/GestureHistory';
 import GestureDemo from './components/GestureDemo';
 import BootSequence from './components/BootSequence';
+import RadarSweep from './components/RadarSweep';
 import { GESTURE_EMOJI } from './gestures/emojiMap';
 import PerformanceStats from './components/PerformanceStats';
 import ControlPanel from './components/ControlPanel';
@@ -131,6 +132,12 @@ function App(): ReactElement {
     const handedness = results.multiHandedness[index]?.label;
     return handedness === 'Left' || handedness === 'Right' ? [{ landmarks, handedness }] : [];
   }) ?? [];
+  const radarHands = hands.flatMap(({ gesture }) => {
+    const wrist = gesture.landmarks[0];
+    return wrist
+      ? [{ wristX: (1 - wrist.x) * window.innerWidth, wristY: wrist.y * window.innerHeight }]
+      : [];
+  });
 
   const drawing = useAirDrawing({
     drawingCanvasRef, activeTool, brushColor, brushSize, isDynamicSize, viewMode,
@@ -163,6 +170,7 @@ function App(): ReactElement {
             drawingCanvasRef={drawingCanvasRef}
             showSkeleton={showSkeleton} renderFrame={renderFrame} />
         )}
+        {bootState === 'ready' && <RadarSweep hands={radarHands} />}
         {bootState === 'ready' && (isLoading || error) && (
           <div className="loading-overlay">
             {error ? <p className="camera-error">{error}</p> : <><div className="spinner" /><p>Loading Hand Tracking Model...</p></>}

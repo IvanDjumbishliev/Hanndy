@@ -17,6 +17,9 @@
   --hud-vignette: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.7) 100%);
   --hud-track-background: rgba(0, 20, 30, 0.9);
   --hud-viewport-glow: inset 0 0 60px rgba(0, 245, 255, 0.05);
+  --boot-complete: #00aa88;
+  --boot-final: #fff;
+  --boot-scanline: rgba(0, 0, 0, 0.08);
 
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -43,6 +46,9 @@
   --accent-warning: #f5cc36;
   --accent-danger: #ff4d5e;
   --text-on-accent: #00141e;
+  --boot-complete: #00aa88;
+  --boot-final: #fff;
+  --boot-scanline: rgba(0, 0, 0, 0.08);
   color-scheme: dark;
 }
 

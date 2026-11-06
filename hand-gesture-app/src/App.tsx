@@ -9,7 +9,7 @@ import GestureDisplay from './components/GestureDisplay';
 import GestureHistory from './components/GestureHistory';
 import type { HistoryEntry } from './components/GestureHistory';
 import GestureDemo from './components/GestureDemo';
-import SplashScreen from './components/SplashScreen';
+import BootSequence from './components/BootSequence';
 import { GESTURE_EMOJI } from './gestures/emojiMap';
 import PerformanceStats from './components/PerformanceStats';
 import ControlPanel from './components/ControlPanel';
@@ -20,6 +20,7 @@ import './App.css';
 import './styles/DrawingSurface.css';
 
 type Theme = 'dark' | 'light';
+type BootState = 'booting' | 'ready';
 
 const getInitialTheme = (): Theme => {
   if (typeof window === 'undefined') return 'dark';
@@ -34,8 +35,7 @@ const getInitialTheme = (): Theme => {
 
 function App(): ReactElement {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
-  const [isStarted, setIsStarted] = useState<boolean>(false);
-  const [isSplashVisible, setIsSplashVisible] = useState<boolean>(true);
+  const [bootState, setBootState] = useState<BootState>('booting');
   const isThemeChangeUserInitiatedRef = useRef<boolean>(false);
   const drawingCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -63,12 +63,7 @@ function App(): ReactElement {
   }, [theme]);
 
   const { hands, fps, inferenceMs, handsDetected, isSmoothing, isLoading, error, results } =
-    useHandGesture(videoRef, isStarted);
-  useEffect((): (() => void) | void => {
-    if (!isStarted) return;
-    const timeoutId = window.setTimeout((): void => setIsSplashVisible(false), 300);
-    return (): void => window.clearTimeout(timeoutId);
-  }, [isStarted]);
+    useHandGesture(videoRef, bootState === 'ready');
   useEffect((): void => {
     const detectedHandedness = new Set(hands.map((hand) => hand.handedness));
     for (const handedness of ['Left', 'Right'] as const) {
@@ -122,21 +117,21 @@ function App(): ReactElement {
 
   return (
     <div className="App hand-canvas-container" data-theme={theme}>
-      <div className={`app-view${isStarted ? ' app-view--visible' : ''}`}>
-        {isStarted && <WebcamFeed videoRef={videoRef} />}
-        {isStarted && (
+      <div className={`app-view${bootState === 'ready' ? ' app-view--visible' : ''}`}>
+        {bootState === 'ready' && <WebcamFeed videoRef={videoRef} />}
+        {bootState === 'ready' && (
           <LandmarkOverlay
             hands={overlayHands}
             results={results}
             drawingCanvasRef={drawingCanvasRef}
             showSkeleton={showSkeleton} renderFrame={renderFrame} />
         )}
-        {isStarted && (isLoading || error) && (
+        {bootState === 'ready' && (isLoading || error) && (
           <div className="loading-overlay">
             {error ? <p className="camera-error">{error}</p> : <><div className="spinner" /><p>Loading Hand Tracking Model...</p></>}
           </div>
         )}
-        {isStarted && (
+        {bootState === 'ready' && (
           <>
             <GestureDisplay hands={hands} />
             <GestureDemo hands={hands} />
@@ -168,14 +163,10 @@ function App(): ReactElement {
           </>
         )}
       </div>
-      {isSplashVisible && (
-        <SplashScreen
-          isLoading={isStarted && isLoading}
-          isFadingOut={isStarted}
-          onStart={(): void => setIsStarted(true)}
-        />
+      {bootState === 'booting' && (
+        <BootSequence onComplete={(): void => setBootState('ready')} />
       )}
-      <button
+      {bootState === 'ready' && <button
         className="theme-toggle"
         type="button"
         aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
@@ -185,7 +176,7 @@ function App(): ReactElement {
         }}
       >
         {theme === 'dark' ? '☀' : '☾'}
-      </button>
+      </button>}
     </div>
   );
 }

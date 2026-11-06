@@ -1,0 +1,119 @@
+.bootScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--hud-background);
+  color: var(--accent-cyan);
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  opacity: 1;
+  transform: scaleY(1);
+  transform-origin: center;
+  transition: opacity 400ms ease, transform 400ms ease;
+  animation: crtFlicker 3s infinite;
+}
+
+.bootScreen::after {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 1px,
+    var(--boot-scanline) 1px,
+    var(--boot-scanline) 2px
+  );
+  content: '';
+  pointer-events: none;
+}
+
+.exit {
+  opacity: 0;
+  transform: scaleY(0);
+  animation: none;
+}
+
+.terminal {
+  z-index: 1;
+  width: min(760px, calc(100% - 48px));
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.line {
+  min-height: 1.65em;
+}
+
+.completedLine {
+  color: var(--boot-complete);
+}
+
+.finalLine {
+  color: var(--boot-final);
+  font-weight: 700;
+}
+
+.cursor {
+  animation: cursorBlink 500ms steps(2, start) infinite;
+}
+
+@keyframes cursorBlink {
+  0%,
+  49% {
+    opacity: 0;
+  }
+
+  50%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes crtFlicker {
+  0%,
+  4%,
+  8%,
+  12%,
+  16%,
+  22%,
+  27%,
+  33%,
+  39%,
+  45%,
+  52%,
+  58%,
+  64%,
+  70%,
+  76%,
+  82%,
+  89%,
+  94%,
+  100% {
+    opacity: 1;
+  }
+
+  6%,
+  19%,
+  36%,
+  49%,
+  61%,
+  73%,
+  86%,
+  97% {
+    opacity: 0.97;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bootScreen {
+    animation: none;
+  }
+
+  .cursor {
+    animation-duration: 1s;
+  }
+}

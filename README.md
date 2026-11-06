@@ -1,119 +1,168 @@
 # 🖐 Hanndy — Browser Hand Gesture Controller
 
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![MediaPipe](https://img.shields.io/badge/MediaPipe-Hands-0097A7?logo=google&logoColor=white)](https://developers.google.com/mediapipe)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Build](https://img.shields.io/github/actions/workflow/status/IvanDjumbishliev/Hanndy/ci.yml?branch=main&style=for-the-badge&label=Build)](https://github.com/IvanDjumbishliev/Hanndy/actions/workflows/ci.yml)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
+[![MediaPipe](https://img.shields.io/badge/MediaPipe-Hands-0097A7?style=for-the-badge&logo=google&logoColor=white)](https://developers.google.com/mediapipe)
+[![MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-Hanndy turns webcam hand gestures into browser controls, air drawing, and playful on-screen actions.
+> Control your browser with nothing but your hands. No plugins. No hardware.
+> All ML runs on-device in real time.
 
-## Features
+<!-- Replace with a screen recording GIF -->
 
-- ✊ **Fist** — trigger a confetti burst in the demo and undo the current drawing.
-- ✋ **OpenHand** — reset the demo likes counter and stop its music.
-- 👍 **ThumbsUp** — add a like.
-- 👎 **ThumbsDown** — remove a like (the counter never goes below zero).
-- ✌️ **Peace** — toggle looping background music.
-- ☝️ **Pointing** — move the demo cursor with your index fingertip.
-- 👌 **OK** — recognize and display the gesture.
-- 🤏 **Pinch** — draw in the air.
-- 🤟 **ThreeFingers** — recognize and display the gesture.
-- 🤘 **SpiderMan** — recognize and display the gesture.
-- Live gesture confidence, two-hand tracking, landmark smoothing, and gesture debouncing.
-- Gesture history, runtime performance stats, dark/light themes, and installable PWA support.
+## ✨ Features
 
-## Tech stack
+### Ten recognized gestures
 
-- React 18+ (this repository currently uses React 19)
-- TypeScript
-- MediaPipe Hands
-- CSS Modules
-- Vite
+| Gesture | Action |
+|---|---|
+| ✊ Fist | Undo the current drawing; triggers a confetti burst in the gesture demo |
+| ✋ Open Hand | Reset demo likes and stop demo music |
+| 👍 Thumbs Up | Add a demo like |
+| 👎 Thumbs Down | Remove a demo like |
+| ✌️ Peace | Toggle demo music |
+| ☝️ Pointing | Move the demo cursor with the index fingertip |
+| 👌 OK | Recognized and displayed; usable in gesture combos |
+| 🤏 Pinch | Draw in the air |
+| 🤟 Three Fingers | Recognized and displayed |
+| 🤘 Spider-Man | Recognized and displayed |
 
-## Getting started
+### Stark-inspired HUD and creative controls
+
+- Full-screen mirrored camera feed with floating glass HUD panels and theme toggle.
+- Live gesture cards, confidence meters, hand skeleton, glowing fingertip particle trails, and wrist-mounted radar sweep.
+- Air drawing in 2D and 3D, with adjustable brush, drawing tools, undo, clear, image save, and 3D export.
+- Real-time 3D wireframe hand model with a rotating standby visualization.
+- Gesture history, performance stats, and a gesture-action demo panel.
+- Animated terminal boot sequence, plus voice feedback with adjustable volume.
+- Gesture combo sequences trigger confetti, glitch, Matrix rain, or fireworks.
+- Claude-powered natural-language gesture interpretation.
+- Installable PWA support.
+
+## 🛠 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | React 19 + TypeScript |
+| ML / Vision | MediaPipe Hands (WASM, on-device) |
+| 3D Rendering | Three.js |
+| AI | Claude API (`claude-sonnet-4-6`) |
+| Styling | CSS Modules and CSS |
+| Build | Vite |
+| Deploy | Vercel |
+
+## 🚀 Getting Started
 
 ```bash
 git clone https://github.com/IvanDjumbishliev/Hanndy.git
 cd Hanndy/hand-gesture-app
-npm install
-npm run dev
+npm ci
+npm start
 ```
 
-Open the local URL printed by Vite and choose **Start Camera**. Grant camera access when prompted. Camera access requires a secure context: use `localhost` for local development or HTTPS when deployed.
-An internet connection is required to load MediaPipe runtime and model assets from jsDelivr.
+Open the local URL printed by Vite and allow camera access. Camera access requires a secure context: `localhost` is supported for development, and Vercel serves the app over HTTPS. The MediaPipe runtime and model are loaded from jsDelivr, so an internet connection is required.
 
-Other useful commands:
+Useful project commands:
 
 ```bash
 npm test          # run tests
-npm run lint      # lint the project
+npm run lint      # lint source
 npx tsc --noEmit  # type-check
-npm run build     # create the production/PWA build
+npm run build     # type-check and create production/PWA build
 npm run preview   # preview the production build
 ```
 
-## Project structure
+## 🎮 Gesture Combos
+
+| Sequence | Combo | Effect |
+|---|---|---|
+| Thumbs Up → Peace | 🏆 Victory Salute | Confetti |
+| Thumbs Down → Fist | 💥 Danger Mode | Glitch effect |
+| Peace → Peace → Peace | 🟢 Matrix Mode | Matrix rain |
+| OK → Thumbs Up → Open Hand | 🎆 Fireworks | Six fireworks bursts |
+
+## 📁 Project Structure
 
 ```text
 hand-gesture-app/
 ├── public/
-│   ├── icons/                    # PWA install icons (192px and 512px)
-│   └── vite.svg                  # Vite starter asset
+│   ├── icons/                         # PWA install icons
+│   └── vite.svg                       # Vite starter icon
 ├── src/
-│   ├── App.css                   # Global application overlay styles
-│   ├── App.tsx                   # App composition, theme, history, and gesture wiring
-│   ├── index.css                 # Global reset and theme custom properties
-│   ├── main.tsx                  # React application entry point
+│   ├── api/
+│   │   └── interpretGestures.ts       # Claude gesture-sequence interpretation
 │   ├── assets/
-│   │   └── react.svg             # React starter asset
+│   │   └── react.svg                  # React starter asset
 │   ├── components/
-│   │   ├── ControlPanel.tsx      # Drawing and visualization settings
-│   │   ├── DrawingControls.tsx   # Brush, tool, and drawing mode controls
-│   │   ├── GestureDemo.tsx       # Gesture-triggered demo actions and legend
-│   │   ├── GestureDemo.module.css # Gesture demo panel styles
-│   │   ├── GestureDisplay.tsx    # Live gesture cards and confidence
-│   │   ├── GestureDisplay.module.css # Gesture card styles
-│   │   ├── GestureHistory.tsx    # Scrollable recent-gesture strip
-│   │   ├── GestureHistory.module.css # Gesture history styles
-│   │   ├── LandmarkOverlay.tsx   # Mirrored, glowing two-hand skeleton overlay
-│   │   ├── PerformanceStats.tsx  # Collapsible live runtime metrics
-│   │   ├── PerformanceStats.module.css # Performance panel styles
-│   │   ├── Scene3D.tsx           # Three-dimensional drawing scene
-│   │   ├── SplashScreen.tsx      # Start screen shown before camera access
-│   │   ├── SplashScreen.module.css # Splash screen styles and animations
-│   │   ├── VisualizationControls.tsx # Visualization and export controls
-│   │   └── WebcamFeed.tsx        # Camera video element
+│   │   ├── AIInterpretation.tsx       # JARVIS-style AI interpretation panel
+│   │   ├── AIInterpretation.module.css # AI panel glass styling and loading animation
+│   │   ├── BootSequence.tsx           # Animated terminal boot display
+│   │   ├── BootSequence.module.css    # CRT boot screen and scanlines
+│   │   ├── ControlPanel.tsx           # Main drawing and visualization controls
+│   │   ├── DrawingControls.tsx         # Brush, tool, and drawing-mode controls
+│   │   ├── GestureDemo.tsx             # Gesture-triggered demo actions
+│   │   ├── GestureDemo.module.css      # Demo panel styling
+│   │   ├── GestureDisplay.tsx           # Live gestures and confidence cards
+│   │   ├── GestureDisplay.module.css   # Gesture card styling
+│   │   ├── GestureHistory.tsx           # Recent gesture history strip
+│   │   ├── GestureHistory.module.css   # History strip styling
+│   │   ├── HandModel3D.tsx              # Live Three.js wireframe hand
+│   │   ├── HandModel3D.module.css      # Floating 3D model panel
+│   │   ├── LandmarkOverlay.tsx          # Landmark skeleton and particle trails
+│   │   ├── PerformanceStats.tsx          # FPS and inference metrics
+│   │   ├── PerformanceStats.module.css # Performance panel styling
+│   │   ├── RadarSweep.tsx               # Animated wrist radar canvases
+│   │   ├── RadarSweep.module.css       # Radar overlay styling
+│   │   ├── Scene3D.tsx                  # Interactive 3D drawing scene
+│   │   ├── VisualizationControls.tsx   # Skeleton and scene action controls
+│   │   └── WebcamFeed.tsx               # Webcam video element
+│   ├── effects/
+│   │   ├── confetti.ts                 # Confetti combo effect
+│   │   ├── fireworks.ts                # Staggered fireworks bursts
+│   │   ├── glitch.ts                   # Temporary HUD glitch effect
+│   │   └── matrix.ts                   # Animated Matrix rain canvas
 │   ├── gestures/
-│   │   ├── emojiMap.ts           # Gesture-to-emoji mapping
-│   │   ├── recognizer.ts         # Rule-based 21-landmark gesture recognizer
-│   │   └── recognizer.test.ts    # Gesture recognition tests
+│   │   ├── combos.ts                   # Gesture combo definitions
+│   │   ├── emojiMap.ts                 # Gesture emoji lookup
+│   │   ├── recognizer.ts               # Landmark-based gesture classifier
+│   │   └── recognizer.test.ts          # Gesture recognizer tests
 │   ├── hooks/
-│   │   ├── useAirDrawing.ts      # Gesture-controlled 2D/3D drawing
-│   │   ├── useHandGesture.ts     # Camera, MediaPipe inference, smoothing, and debounce
-│   │   └── useHandGesture.test.ts # Hook initial-state test
+│   │   ├── useAirDrawing.ts            # 2D and 3D air-drawing behavior
+│   │   ├── useGestureCombo.ts          # Gesture-sequence combo matching
+│   │   ├── useHandGesture.ts           # Camera, MediaPipe, smoothing, debounce
+│   │   ├── useHandGesture.test.ts      # Hand-tracking hook tests
+│   │   ├── useParticleTrail.ts         # Ref-based fingertip particle system
+│   │   └── useVoiceFeedback.ts         # Browser speech synthesis
 │   ├── styles/
-│   │   ├── ControlPanel.css      # Control panel and button styles
-│   │   └── DrawingSurface.css    # Video, canvas, and app view layout
+│   │   ├── ControlPanel.css            # Control panel and button styling
+│   │   └── DrawingSurface.css          # Fullscreen video and canvas layers
 │   ├── types/
-│   │   ├── gestures.ts           # Gesture and landmark types
-│   │   ├── mediapipe-globals.d.ts # MediaPipe browser globals
-│   │   └── tracking.ts           # Tracking, rendering, and history types
-│   └── utils/
-│       ├── drawingUtils.ts       # Canvas drawing and skeleton helpers
-│       └── gestureUtils.ts       # Drawn-shape detection helpers
-├── index.html                    # HTML shell and PWA manifest link
-├── vite.config.ts                # Vite, React, and PWA configuration
-└── package.json                  # Dependencies and project scripts
+│   │   ├── gestures.ts                 # Gesture and landmark types
+│   │   ├── mediapipe-globals.d.ts      # MediaPipe browser global declarations
+│   │   └── tracking.ts                 # Hand tracking and rendering types
+│   ├── utils/
+│   │   ├── drawingUtils.ts             # Canvas drawing helpers
+│   │   └── gestureUtils.ts             # Drawing gesture and shape helpers
+│   ├── App.css                         # HUD, toast, and loading styles
+│   ├── App.tsx                         # App composition and feature wiring
+│   ├── index.css                       # Theme tokens and global viewport reset
+│   └── main.tsx                        # React entry point
+├── index.html                          # App HTML shell
+├── package.json                        # Dependencies and commands
+├── tsconfig.json                       # TypeScript configuration
+├── vercel.json                         # Vercel build configuration
+└── vite.config.ts                      # Vite and PWA configuration
 ```
 
-## How it works
+## 🔭 How It Works
 
-MediaPipe Hands processes webcam frames in the `useHandGesture` hook, which smooths landmarks, recognizes gestures, and debounces results for each hand. The app passes confirmed gestures and smoothed landmarks to React components for the overlay, display, history, and demo actions. Camera inference runs locally in the browser, and video is not uploaded by Hanndy.
+The browser requests camera permission using `getUserMedia`, then sends video frames to MediaPipe Hands. Hand landmark inference runs on-device in the browser; camera video is not uploaded by Hanndy. An internet connection is used to retrieve the MediaPipe runtime and model assets.
 
-## Contributing
+`useHandGesture` smooths the 21 landmarks for each hand, classifies candidate poses, and confirms gestures only after repeated matching frames. The confirmed hand data drives the gesture cards, history, voice feedback, combo matching, AI interpretation, fingertip trails, radar, and 3D wireframe.
 
-1. Fork the repository and create a feature branch: `git checkout -b feat/your-change`.
-2. Install dependencies from `hand-gesture-app/` and make a focused change.
-3. Run `npm test`, `npm run lint`, and `npx tsc --noEmit` from `hand-gesture-app/`.
-4. Commit your changes and push the branch to your fork.
-5. Open a pull request against the upstream `main` branch with a clear summary and testing notes.
+The HUD layers the mirrored video with canvas visualizations and floating controls. Pinching draws on the canvas or into the 3D scene, while other gestures can control demo actions or trigger a combo effect. The app builds as a Vite PWA and can be deployed to Vercel, whose HTTPS origin supports camera access.
+
+## 📄 License
+
+MIT

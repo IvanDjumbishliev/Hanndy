@@ -19,9 +19,9 @@ interface ControlPanelProps extends DrawingControlsProps {
   showStats: boolean;
   setShowStats: Dispatch<SetStateAction<boolean>>;
   voiceEnabled: boolean;
-  setVoiceEnabled: Dispatch<SetStateAction<boolean>>;
+  setVoiceEnabled: (enabled: boolean) => void;
   voiceVolume: number;
-  setVoiceVolume: Dispatch<SetStateAction<number>>;
+  setVoiceVolume: (volume: number) => void;
   undo: () => void;
   clearCanvas: () => void;
   saveImage: () => void;
@@ -85,7 +85,7 @@ const ControlPanel = (props: ControlPanelProps): ReactElement => {
 interface PanelToggleProps {
   label: string;
   checked: boolean;
-  onChange: Dispatch<SetStateAction<boolean>>;
+  onChange: (checked: boolean) => void;
 }
 
 const PanelToggle = ({ label, checked, onChange }: PanelToggleProps): ReactElement => (
